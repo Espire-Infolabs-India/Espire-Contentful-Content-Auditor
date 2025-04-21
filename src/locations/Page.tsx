@@ -91,13 +91,11 @@ const Page = () => {
   return (
     <Flex flexDirection="column" padding="spacingL" gap="spacingM">
       <Heading>Unused Entries Report</Heading>
-
       <Paragraph>
         <strong>Current Space ID:</strong> {spaceId} <br />
         <strong>Current Space Name :</strong> {spaceName} <br />
         <strong>Current Environment ID:</strong> {environmentId}
       </Paragraph>
-
       {fetchingTypes ? (
         <Spinner size="medium" />
       ) : (
@@ -114,7 +112,6 @@ const Page = () => {
           </Select>
         )
       )}
-
       <Button
         variant="primary"
         onClick={handleGenerateReport}
@@ -123,13 +120,10 @@ const Page = () => {
       >
         Generate Report
       </Button>
-
       {loading && <Spinner size="large" />}
-
       {!loading && hasGenerated && unusedEntries.length === 0 && (
         <Paragraph>🎉 No unused entries found!</Paragraph>
       )}
-
       {unusedEntries?.length > 0 && (
         <UnusedEntriesTable
           entries={unusedEntries}
