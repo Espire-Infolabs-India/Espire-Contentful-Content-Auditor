@@ -6,6 +6,7 @@ import {
   Flex,
   Paragraph,
   Select,
+  Checkbox,
 } from "@contentful/f36-components";
 import { PageAppSDK } from "@contentful/app-sdk";
 import { useSDK } from "@contentful/react-apps-toolkit";
@@ -14,11 +15,15 @@ import { deleteEntries } from "../lib/deleteEntries";
 import { getSpaceDetails } from "../lib/getSpaceDetails";
 import { getCmaToken } from "../lib/getAppParameters";
 import { fetchContentTypes } from "../lib/fetchContentTypes";
+import { generateMediaReport } from "../lib/generateMediaReport";
+import { deleteAssets } from "../lib/deleteAssets";
 import UnusedEntriesTable from "../components/Reports/UnusedEntriesTable";
 
 const Page = () => {
   const sdk = useSDK<PageAppSDK>();
   const [unusedEntries, setUnusedEntries] = useState<any[]>([]);
+  const [unusedMedia, setUnusedMedia] = useState<any[]>([]);
+  const [selectedAssets, setSelectedAssets] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
   const [accessToken, setAccessToken] = useState("");
@@ -47,11 +52,7 @@ const Page = () => {
 
       setFetchingTypes(true);
       try {
-        const data = await fetchContentTypes(
-          spaceId,
-          environmentId,
-          accessToken
-        );
+        const data = await fetchContentTypes(spaceId, environmentId, accessToken);
         setContentTypes(data.items);
         if (data.items.length > 0) {
           setSelectedContentType(data.items[0].sys.id);
@@ -65,8 +66,12 @@ const Page = () => {
   }, [accessToken, spaceId, environmentId]);
 
   const handleGenerateReport = () => {
-    if (!spaceId || !environmentId || !accessToken || !selectedContentType)
-      return;
+    if (!spaceId || !environmentId || !accessToken || !selectedContentType) return;
+
+    // Clear media report and selection
+    setUnusedMedia([]);
+    setSelectedAssets([]);
+
     generateReport(
       accessToken,
       spaceId,
@@ -78,13 +83,45 @@ const Page = () => {
     );
   };
 
-  const handleDeleteEntries = (entryIds: string[]) => {
-    deleteEntries(
-      entryIds,
+  const handleGenerateMediaReport = () => {
+    if (!spaceId || !environmentId || !accessToken) return;
+
+    setLoading(true);
+    setHasGenerated(false);
+
+    // Clear entry report
+    setUnusedEntries([]);
+
+    generateMediaReport(
       accessToken,
       spaceId,
       environmentId,
-      handleGenerateReport
+      (assets) => {
+        setUnusedMedia(assets);
+        setLoading(false);
+        setHasGenerated(true); // Set after media report is generated
+      },
+      setLoading,
+      setHasGenerated
+    );
+  };
+
+  const handleDeleteEntries = (entryIds: string[]) => {
+    deleteEntries(entryIds, accessToken, spaceId, environmentId, handleGenerateReport);
+  };
+
+  const handleDeleteAssets = () => {
+    deleteAssets(selectedAssets, accessToken, spaceId, environmentId, () => {
+      setSelectedAssets([]);
+      handleGenerateMediaReport();
+    });
+  };
+
+  const toggleAssetSelection = (assetId: string) => {
+    setSelectedAssets((prev) =>
+      prev.includes(assetId)
+        ? prev.filter((id) => id !== assetId)
+        : [...prev, assetId]
     );
   };
 
@@ -93,9 +130,10 @@ const Page = () => {
       <Heading>Unused Entries Report</Heading>
       <Paragraph>
         <strong>Current Space ID:</strong> {spaceId} <br />
-        <strong>Current Space Name :</strong> {spaceName} <br />
+        <strong>Current Space Name:</strong> {spaceName} <br />
         <strong>Current Environment ID:</strong> {environmentId}
       </Paragraph>
+
       {fetchingTypes ? (
         <Spinner size="medium" />
       ) : (
@@ -112,24 +150,62 @@ const Page = () => {
           </Select>
         )
       )}
-      <Button
-        variant="primary"
-        onClick={handleGenerateReport}
-        isLoading={loading}
-        isDisabled={!accessToken || !selectedContentType}
-      >
-        Generate Report
-      </Button>
+
+      <Flex gap="spacingS">
+        <Button
+          variant="primary"
+          onClick={handleGenerateReport}
+          isLoading={loading}
+          isDisabled={!accessToken || !selectedContentType}
+        >
+          Generate Report
+        </Button>
+        <Button
+          variant="secondary"
+          onClick={handleGenerateMediaReport}
+          isLoading={loading}
+          isDisabled={!accessToken}
+        >
+          Generate Media Report
+        </Button>
+      </Flex>
+
       {loading && <Spinner size="large" />}
-      {!loading && hasGenerated && unusedEntries.length === 0 && (
-        <Paragraph>🎉 No unused entries found!</Paragraph>
+
+      {!loading && hasGenerated && unusedEntries.length === 0 && unusedMedia.length === 0 && (
+        <Paragraph>🎉 No unused entries or media found!</Paragraph>
       )}
-      {unusedEntries?.length > 0 && (
+
+      {unusedEntries.length > 0 ? (
         <UnusedEntriesTable
           entries={unusedEntries}
           onDeleteSelected={handleDeleteEntries}
         />
-      )}
+      ) : unusedMedia.length > 0 ? (
+        <>
+          <Heading as="h3">Unused Media Items</Heading>
+          <Flex flexDirection="column" gap="spacingXs">
+            {unusedMedia.map((asset) => (
+              <Checkbox
+                key={asset.sys.id}
+                isChecked={selectedAssets.includes(asset.sys.id)}
+                onChange={() => toggleAssetSelection(asset.sys.id)}
+              >
+                {asset.fields?.title?.["en-US"] || asset.sys.id}
+              </Checkbox>
+            ))}
+          </Flex>
+          <Flex marginTop="spacingS">
+            <Button
+              variant="negative"
+              onClick={handleDeleteAssets}
+              isDisabled={selectedAssets.length === 0}
+            >
+              Delete Selected Media
+            </Button>
+          </Flex>
+        </>
+      ) : null}
     </Flex>
   );
 };
