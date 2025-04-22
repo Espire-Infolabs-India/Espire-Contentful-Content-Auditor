@@ -24,7 +24,10 @@ const Page = () => {
   const [unusedEntries, setUnusedEntries] = useState<any[]>([]);
   const [unusedMedia, setUnusedMedia] = useState<any[]>([]);
   const [selectedAssets, setSelectedAssets] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loadingState, setLoadingState] = useState<"entries" | "media" | null>(
+    null
+  );
+
   const [hasGenerated, setHasGenerated] = useState(false);
   const [accessToken, setAccessToken] = useState("");
   const [contentTypes, setContentTypes] = useState<any[]>([]);
@@ -52,7 +55,11 @@ const Page = () => {
 
       setFetchingTypes(true);
       try {
-        const data = await fetchContentTypes(spaceId, environmentId, accessToken);
+        const data = await fetchContentTypes(
+          spaceId,
+          environmentId,
+          accessToken
+        );
         setContentTypes(data.items);
         if (data.items.length > 0) {
           setSelectedContentType(data.items[0].sys.id);
@@ -66,31 +73,33 @@ const Page = () => {
   }, [accessToken, spaceId, environmentId]);
 
   const handleGenerateReport = () => {
-    if (!spaceId || !environmentId || !accessToken || !selectedContentType) return;
+    if (!spaceId || !environmentId || !accessToken || !selectedContentType)
+      return;
 
-    // Clear media report and selection
-    setUnusedMedia([]);
+    setUnusedMedia([]); // Clear media report and selection
     setSelectedAssets([]);
+    setLoadingState("entries");
 
     generateReport(
       accessToken,
       spaceId,
       environmentId,
       setUnusedEntries,
-      setLoading,
-      setHasGenerated,
+      () => setHasGenerated(true),
       selectedContentType
-    );
+    )
+      .catch((error) => {
+        console.error("Error generating report:", error);
+      })
+      .finally(() => setLoadingState(null));
   };
 
   const handleGenerateMediaReport = () => {
     if (!spaceId || !environmentId || !accessToken) return;
 
-    setLoading(true);
-    setHasGenerated(false);
-
-    // Clear entry report
     setUnusedEntries([]);
+    setLoadingState("media");
+    setHasGenerated(false);
 
     generateMediaReport(
       accessToken,
@@ -98,16 +107,24 @@ const Page = () => {
       environmentId,
       (assets) => {
         setUnusedMedia(assets);
-        setLoading(false);
-        setHasGenerated(true); // Set after media report is generated
+        setHasGenerated(true);
       },
-      setLoading,
-      setHasGenerated
-    );
+      () => setHasGenerated(true)
+    )
+      .catch((error) => {
+        console.error("Error generating media report:", error);
+      })
+      .finally(() => setLoadingState(null));
   };
 
   const handleDeleteEntries = (entryIds: string[]) => {
-    deleteEntries(entryIds, accessToken, spaceId, environmentId, handleGenerateReport);
+    deleteEntries(
+      entryIds,
+      accessToken,
+      spaceId,
+      environmentId,
+      handleGenerateReport
+    );
   };
 
   const handleDeleteAssets = () => {
@@ -133,7 +150,6 @@ const Page = () => {
         <strong>Current Space Name:</strong> {spaceName} <br />
         <strong>Current Environment ID:</strong> {environmentId}
       </Paragraph>
-
       {fetchingTypes ? (
         <Spinner size="medium" />
       ) : (
@@ -150,12 +166,11 @@ const Page = () => {
           </Select>
         )
       )}
-
       <Flex gap="spacingS">
         <Button
           variant="primary"
           onClick={handleGenerateReport}
-          isLoading={loading}
+          isLoading={loadingState === "entries"}
           isDisabled={!accessToken || !selectedContentType}
         >
           Generate Report
@@ -163,19 +178,20 @@ const Page = () => {
         <Button
           variant="secondary"
           onClick={handleGenerateMediaReport}
-          isLoading={loading}
+          isLoading={loadingState === "media"}
           isDisabled={!accessToken}
         >
           Generate Media Report
         </Button>
       </Flex>
+      {loadingState && <Spinner size="large" />}
 
-      {loading && <Spinner size="large" />}
-
-      {!loading && hasGenerated && unusedEntries.length === 0 && unusedMedia.length === 0 && (
-        <Paragraph>🎉 No unused entries or media found!</Paragraph>
-      )}
-
+      {!loadingState &&
+        hasGenerated &&
+        unusedEntries.length === 0 &&
+        unusedMedia.length === 0 && (
+          <Paragraph>🎉 No unused entries or media found!</Paragraph>
+        )}
       {unusedEntries.length > 0 ? (
         <UnusedEntriesTable
           entries={unusedEntries}
@@ -211,3 +227,5 @@ const Page = () => {
 };
 
 export default Page;
+
+// 🔚 End of the code
