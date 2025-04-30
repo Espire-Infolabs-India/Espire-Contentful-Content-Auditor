@@ -34,7 +34,7 @@ export const generateMediaReport = async (
       );
 
       const usageData = await usageRes.json();
-      const isUsed = usageData.items.length > 0;
+      const isUsed = usageData.items?.length > 0;
 
       if (!isUsed) {
         unusedAssets.push(asset);

@@ -17,16 +17,16 @@ import { getCmaToken } from "../lib/getAppParameters";
 import { fetchContentTypes } from "../lib/fetchContentTypes";
 import { generateMediaReport } from "../lib/generateMediaReport";
 import { deleteAssets } from "../lib/deleteAssets";
+import { generateUnusedContentTypesReport } from "../lib/generateUnusedContentTypesReport";
 import UnusedEntriesTable from "../components/Reports/UnusedEntriesTable";
 
 const Page = () => {
   const sdk = useSDK<PageAppSDK>();
   const [unusedEntries, setUnusedEntries] = useState<any[]>([]);
   const [unusedMedia, setUnusedMedia] = useState<any[]>([]);
+  const [unusedContentTypes, setUnusedContentTypes] = useState<any[]>([]);
   const [selectedAssets, setSelectedAssets] = useState<string[]>([]);
-  const [loadingState, setLoadingState] = useState<"entries" | "media" | null>(
-    null
-  );
+  const [loadingState, setLoadingState] = useState<"entries" | "media" | "types" | null>(null);
 
   const [hasGenerated, setHasGenerated] = useState(false);
   const [accessToken, setAccessToken] = useState("");
@@ -55,11 +55,7 @@ const Page = () => {
 
       setFetchingTypes(true);
       try {
-        const data = await fetchContentTypes(
-          spaceId,
-          environmentId,
-          accessToken
-        );
+        const data = await fetchContentTypes(spaceId, environmentId, accessToken);
         setContentTypes(data.items);
         if (data.items.length > 0) {
           setSelectedContentType(data.items[0].sys.id);
@@ -73,11 +69,11 @@ const Page = () => {
   }, [accessToken, spaceId, environmentId]);
 
   const handleGenerateReport = () => {
-    if (!spaceId || !environmentId || !accessToken || !selectedContentType)
-      return;
+    if (!spaceId || !environmentId || !accessToken || !selectedContentType) return;
 
-    setUnusedMedia([]); // Clear media report and selection
+    setUnusedMedia([]);
     setSelectedAssets([]);
+    setUnusedContentTypes([]);
     setLoadingState("entries");
 
     generateReport(
@@ -98,6 +94,7 @@ const Page = () => {
     if (!spaceId || !environmentId || !accessToken) return;
 
     setUnusedEntries([]);
+    setUnusedContentTypes([]);
     setLoadingState("media");
     setHasGenerated(false);
 
@@ -117,14 +114,30 @@ const Page = () => {
       .finally(() => setLoadingState(null));
   };
 
+  const handleGenerateUnusedContentTypeReport = async () => {
+    if (!accessToken || !spaceId || !environmentId) return;
+
+    setUnusedEntries([]);
+    setUnusedMedia([]);
+    setLoadingState("types");
+    setHasGenerated(false);
+    try {
+      const result = await generateUnusedContentTypesReport(
+        accessToken,
+        spaceId,
+        environmentId
+      );
+      setUnusedContentTypes(result);
+      setHasGenerated(true);
+    } catch (error) {
+      console.error("Error generating unused content types report:", error);
+    } finally {
+      setLoadingState(null);
+    }
+  };
+
   const handleDeleteEntries = (entryIds: string[]) => {
-    deleteEntries(
-      entryIds,
-      accessToken,
-      spaceId,
-      environmentId,
-      handleGenerateReport
-    );
+    deleteEntries(entryIds, accessToken, spaceId, environmentId, handleGenerateReport);
   };
 
   const handleDeleteAssets = () => {
@@ -144,7 +157,7 @@ const Page = () => {
 
   return (
     <Flex flexDirection="column" padding="spacingL" gap="spacingM">
-      <Heading>Unused Entries Report</Heading>
+      <Heading>Unused Content Report</Heading>
       <Paragraph>
         <strong>Current Space ID:</strong> {spaceId} <br />
         <strong>Current Space Name:</strong> {spaceName} <br />
@@ -171,11 +184,9 @@ const Page = () => {
           variant="primary"
           onClick={handleGenerateReport}
           isLoading={loadingState === "entries"}
-          isDisabled={
-            !accessToken || !selectedContentType || loadingState !== null
-          }
+          isDisabled={!accessToken || !selectedContentType || loadingState !== null}
         >
-          Generate Report
+          Generate Entry Report
         </Button>
         <Button
           variant="secondary"
@@ -185,21 +196,23 @@ const Page = () => {
         >
           Generate Media Report
         </Button>
+        <Button
+          variant="secondary"
+          onClick={handleGenerateUnusedContentTypeReport}
+          isLoading={loadingState === "types"}
+          isDisabled={!accessToken || loadingState !== null}
+        >
+          Unused Content Types
+        </Button>
       </Flex>
       {loadingState && <Spinner size="large" />}
-
-      {!loadingState &&
-        hasGenerated &&
-        unusedEntries.length === 0 &&
-        unusedMedia.length === 0 && (
-          <Paragraph>🎉 No unused entries or media found!</Paragraph>
-        )}
-      {unusedEntries.length > 0 ? (
-        <UnusedEntriesTable
-          entries={unusedEntries}
-          onDeleteSelected={handleDeleteEntries}
-        />
-      ) : unusedMedia.length > 0 ? (
+      {!loadingState && hasGenerated && unusedEntries.length === 0 && unusedMedia.length === 0 && unusedContentTypes.length === 0 && (
+        <Paragraph>🎉 No unused entries, media, or content types found!</Paragraph>
+      )}
+      {unusedEntries.length > 0 && (
+        <UnusedEntriesTable entries={unusedEntries} onDeleteSelected={handleDeleteEntries} />
+      )}
+      {unusedMedia.length > 0 && (
         <>
           <Heading as="h3">Unused Media Items</Heading>
           <Flex flexDirection="column" gap="spacingXs">
@@ -223,7 +236,17 @@ const Page = () => {
             </Button>
           </Flex>
         </>
-      ) : null}
+      )}
+      {unusedContentTypes.length > 0 && (
+        <>
+          <Heading as="h3">Unused Content Types</Heading>
+          <ul>
+            {unusedContentTypes.map((ct) => (
+              <li key={ct.sys.id}>{ct.name || ct.sys.id}</li>
+            ))}
+          </ul>
+        </>
+      )}
     </Flex>
   );
 };
