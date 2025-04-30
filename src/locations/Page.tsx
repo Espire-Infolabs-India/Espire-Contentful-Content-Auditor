@@ -171,7 +171,9 @@ const Page = () => {
           variant="primary"
           onClick={handleGenerateReport}
           isLoading={loadingState === "entries"}
-          isDisabled={!accessToken || !selectedContentType}
+          isDisabled={
+            !accessToken || !selectedContentType || loadingState !== null
+          }
         >
           Generate Report
         </Button>
@@ -179,7 +181,7 @@ const Page = () => {
           variant="secondary"
           onClick={handleGenerateMediaReport}
           isLoading={loadingState === "media"}
-          isDisabled={!accessToken}
+          isDisabled={!accessToken || loadingState !== null}
         >
           Generate Media Report
         </Button>
@@ -227,5 +229,3 @@ const Page = () => {
 };
 
 export default Page;
-
-// 🔚 End of the code
