@@ -7,46 +7,54 @@ import {
   Paragraph,
   Select,
   Checkbox,
+  Text,
 } from "@contentful/f36-components";
 import { PageAppSDK } from "@contentful/app-sdk";
 import { useSDK } from "@contentful/react-apps-toolkit";
 import { generateReport } from "../lib/generateReport";
-import { deleteEntries } from "../lib/deleteEntries";
-import { getSpaceDetails } from "../lib/getSpaceDetails";
-import { getCmaToken } from "../lib/getAppParameters";
-import { fetchContentTypes } from "../lib/fetchContentTypes";
 import { generateMediaReport } from "../lib/generateMediaReport";
 import { deleteAssets } from "../lib/deleteAssets";
 import { generateUnusedContentTypesReport } from "../lib/generateUnusedContentTypesReport";
+import { getSpaceDetails } from "../lib/getSpaceDetails";
+import { getCmaToken } from "../lib/getAppParameters";
+import { fetchContentTypes } from "../lib/fetchContentTypes";
 import UnusedEntriesTable from "../components/Reports/UnusedEntriesTable";
+import { deleteEntries } from "../lib/deleteEntries";
 
 const Page = () => {
   const sdk = useSDK<PageAppSDK>();
-  const [unusedEntries, setUnusedEntries] = useState<any[]>([]);
-  const [unusedMedia, setUnusedMedia] = useState<any[]>([]);
-  const [unusedContentTypes, setUnusedContentTypes] = useState<any[]>([]);
-  const [selectedAssets, setSelectedAssets] = useState<string[]>([]);
-  const [loadingState, setLoadingState] = useState<"entries" | "media" | "types" | null>(null);
 
-  const [hasGenerated, setHasGenerated] = useState(false);
   const [accessToken, setAccessToken] = useState("");
-  const [contentTypes, setContentTypes] = useState<any[]>([]);
-  const [selectedContentType, setSelectedContentType] = useState("");
-  const [fetchingTypes, setFetchingTypes] = useState(false);
   const [spaceName, setSpaceName] = useState("");
   const [spaceId, setSpaceId] = useState("");
   const [environmentId, setEnvironmentId] = useState("");
 
+  const [contentTypes, setContentTypes] = useState<any[]>([]);
+  const [selectedContentType, setSelectedContentType] = useState("");
+  const [fetchingTypes, setFetchingTypes] = useState(false);
+
+  const [unusedEntries, setUnusedEntries] = useState<any[]>([]);
+  const [unusedMedia, setUnusedMedia] = useState<any[]>([]);
+  const [unusedContentTypes, setUnusedContentTypes] = useState<any[]>([]);
+  const [selectedAssets, setSelectedAssets] = useState<string[]>([]);
+
+  const [loadingState, setLoadingState] = useState<"entries" | "media" | "types" | null>(null);
+  const [hasGenerated, setHasGenerated] = useState(false);
+
+  const [showContentTypeDropdown, setShowContentTypeDropdown] = useState(false);
+  const [isGeneratingEntryReport, setIsGeneratingEntryReport] = useState(false);
+
   useEffect(() => {
-    const initializeApp = async () => {
+    const initialize = async () => {
       const { spaceId, environmentId, spaceName } = await getSpaceDetails(sdk);
       setSpaceId(spaceId);
       setEnvironmentId(environmentId);
       setSpaceName(spaceName);
+
       const token = getCmaToken(sdk);
       if (token) setAccessToken(token);
     };
-    initializeApp();
+    initialize();
   }, [sdk]);
 
   useEffect(() => {
@@ -57,76 +65,52 @@ const Page = () => {
       try {
         const data = await fetchContentTypes(spaceId, environmentId, accessToken);
         setContentTypes(data.items);
-        if (data.items.length > 0) {
-          setSelectedContentType(data.items[0].sys.id);
-        }
+        if (data.items.length > 0) setSelectedContentType(data.items[0].sys.id);
       } catch (err) {
         console.error("Failed to fetch content types", err);
+      } finally {
+        setFetchingTypes(false);
       }
-      setFetchingTypes(false);
     };
     fetchTypes();
   }, [accessToken, spaceId, environmentId]);
 
-  const handleGenerateReport = () => {
-    if (!spaceId || !environmentId || !accessToken || !selectedContentType) return;
-
+  const resetReports = () => {
+    setUnusedEntries([]);
     setUnusedMedia([]);
-    setSelectedAssets([]);
     setUnusedContentTypes([]);
-    setLoadingState("entries");
-
-    generateReport(
-      accessToken,
-      spaceId,
-      environmentId,
-      setUnusedEntries,
-      () => setHasGenerated(true),
-      selectedContentType
-    )
-      .catch((error) => {
-        console.error("Error generating report:", error);
-      })
-      .finally(() => setLoadingState(null));
+    setHasGenerated(false);
   };
 
-  const handleGenerateMediaReport = () => {
+  const handleGenerateMediaReport = async () => {
     if (!spaceId || !environmentId || !accessToken) return;
 
-    setUnusedEntries([]);
-    setUnusedContentTypes([]);
+    resetReports();
     setLoadingState("media");
-    setHasGenerated(false);
 
-    generateMediaReport(
-      accessToken,
-      spaceId,
-      environmentId,
-      (assets) => {
-        setUnusedMedia(assets);
-        setHasGenerated(true);
-      },
-      () => setHasGenerated(true)
-    )
-      .catch((error) => {
-        console.error("Error generating media report:", error);
-      })
-      .finally(() => setLoadingState(null));
+    try {
+      await generateMediaReport(
+        accessToken,
+        spaceId,
+        environmentId,
+        setUnusedMedia,
+        () => setHasGenerated(true)
+      );
+    } catch (error) {
+      console.error("Error generating media report:", error);
+    } finally {
+      setLoadingState(null);
+    }
   };
 
   const handleGenerateUnusedContentTypeReport = async () => {
     if (!accessToken || !spaceId || !environmentId) return;
 
-    setUnusedEntries([]);
-    setUnusedMedia([]);
+    resetReports();
     setLoadingState("types");
-    setHasGenerated(false);
+
     try {
-      const result = await generateUnusedContentTypesReport(
-        accessToken,
-        spaceId,
-        environmentId
-      );
+      const result = await generateUnusedContentTypesReport(accessToken, spaceId, environmentId);
       setUnusedContentTypes(result);
       setHasGenerated(true);
     } catch (error) {
@@ -137,7 +121,10 @@ const Page = () => {
   };
 
   const handleDeleteEntries = (entryIds: string[]) => {
-    deleteEntries(entryIds, accessToken, spaceId, environmentId, handleGenerateReport);
+    deleteEntries(entryIds, accessToken, spaceId, environmentId, () => {
+      setUnusedEntries([]);
+      setHasGenerated(false);
+    });
   };
 
   const handleDeleteAssets = () => {
@@ -155,36 +142,47 @@ const Page = () => {
     );
   };
 
+  const handleEntryReportSelect = async (contentTypeId: string) => {
+    setSelectedContentType(contentTypeId);
+    setIsGeneratingEntryReport(true);
+    setLoadingState("entries");
+    resetReports();
+
+    try {
+      await generateReport(
+        accessToken,
+        spaceId,
+        environmentId,
+        setUnusedEntries,
+        () => setHasGenerated(true),
+        contentTypeId
+      );
+    } catch (error) {
+      console.error("Error generating entry report:", error);
+    } finally {
+      setIsGeneratingEntryReport(false);
+      setLoadingState(null);
+      setShowContentTypeDropdown(false);
+    }
+  };
+
   return (
     <Flex flexDirection="column" padding="spacingL" gap="spacingM">
-      <Heading>Unused Content Report</Heading>
+      <Heading>Unused Entries Report</Heading>
       <Paragraph>
-        <strong>Current Space ID:</strong> {spaceId} <br />
-        <strong>Current Space Name:</strong> {spaceName} <br />
+        <strong>Current Space ID:</strong> {spaceId}<br />
+        <strong>Current Space Name:</strong> {spaceName}<br />
         <strong>Current Environment ID:</strong> {environmentId}
       </Paragraph>
-      {fetchingTypes ? (
-        <Spinner size="medium" />
-      ) : (
-        contentTypes.length > 0 && (
-          <Select
-            value={selectedContentType}
-            onChange={(e) => setSelectedContentType(e.target.value)}
-          >
-            {contentTypes.map((ct) => (
-              <Select.Option key={ct.sys.id} value={ct.sys.id}>
-                {ct.name || ct.displayField || ct.sys.id}
-              </Select.Option>
-            ))}
-          </Select>
-        )
-      )}
+
       <Flex gap="spacingS">
         <Button
           variant="primary"
-          onClick={handleGenerateReport}
-          isLoading={loadingState === "entries"}
-          isDisabled={!accessToken || !selectedContentType || loadingState !== null}
+          onClick={() => {
+            setShowContentTypeDropdown(true);
+            resetReports();
+          }}
+          isDisabled={!accessToken || loadingState !== null}
         >
           Generate Entry Report
         </Button>
@@ -202,30 +200,55 @@ const Page = () => {
           isLoading={loadingState === "types"}
           isDisabled={!accessToken || loadingState !== null}
         >
-          Unused Content Types
+          Generate Unused Content Types Report
         </Button>
       </Flex>
-      {loadingState && <Spinner size="large" />}
-      {!loadingState && hasGenerated && unusedEntries.length === 0 && unusedMedia.length === 0 && unusedContentTypes.length === 0 && (
+
+      {showContentTypeDropdown && !fetchingTypes && contentTypes.length > 0 && (
+        <Flex flexDirection="column" gap="spacingXs" alignItems="flex-start">
+          <Text>Select a content type to generate an unused entries report:</Text>
+          <Select
+            value={selectedContentType}
+            isDisabled={isGeneratingEntryReport}
+            onChange={(e) => handleEntryReportSelect(e.target.value)}
+          >
+            {contentTypes.map((ct) => (
+              <Select.Option key={ct.sys.id} value={ct.sys.id}>
+                {ct.name || ct.displayField || ct.sys.id}
+              </Select.Option>
+            ))}
+          </Select>
+          {isGeneratingEntryReport && <Spinner size="medium" />}
+        </Flex>
+      )}
+
+      {!loadingState && hasGenerated &&
+        unusedEntries.length === 0 &&
+        unusedMedia.length === 0 &&
+        unusedContentTypes.length === 0 && (
         <Paragraph>🎉 No unused entries, media, or content types found!</Paragraph>
       )}
+
       {unusedEntries.length > 0 && (
         <UnusedEntriesTable entries={unusedEntries} onDeleteSelected={handleDeleteEntries} />
       )}
+
       {unusedMedia.length > 0 && (
         <>
           <Heading as="h3">Unused Media Items</Heading>
-          <Flex flexDirection="column" gap="spacingXs">
-            {unusedMedia.map((asset) => (
-              <Checkbox
-                key={asset.sys.id}
-                isChecked={selectedAssets.includes(asset.sys.id)}
-                onChange={() => toggleAssetSelection(asset.sys.id)}
-              >
-                {asset.fields?.title?.["en-US"] || asset.sys.id}
-              </Checkbox>
-            ))}
-          </Flex>
+          <div style={{ maxHeight: "300px", overflowY: "auto", border: "1px solid #ccc", padding: "8px" }}>
+            <Flex flexDirection="column" gap="spacingXs">
+              {unusedMedia.map((asset) => (
+                <Checkbox
+                  key={asset.sys.id}
+                  isChecked={selectedAssets.includes(asset.sys.id)}
+                  onChange={() => toggleAssetSelection(asset.sys.id)}
+                >
+                  {asset.fields?.title?.["en-US"] || asset.sys.id}
+                </Checkbox>
+              ))}
+            </Flex>
+          </div>
           <Flex marginTop="spacingS">
             <Button
               variant="negative"
@@ -237,14 +260,17 @@ const Page = () => {
           </Flex>
         </>
       )}
+
       {unusedContentTypes.length > 0 && (
         <>
           <Heading as="h3">Unused Content Types</Heading>
-          <ul>
+          <Flex flexDirection="column" gap="spacingXs">
             {unusedContentTypes.map((ct) => (
-              <li key={ct.sys.id}>{ct.name || ct.sys.id}</li>
+              <Text key={ct.sys.id}>
+                {ct.name || ct.displayField || ct.sys.id}
+              </Text>
             ))}
-          </ul>
+          </Flex>
         </>
       )}
     </Flex>

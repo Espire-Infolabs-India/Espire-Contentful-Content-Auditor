@@ -19,6 +19,7 @@ export const generateUnusedContentTypesReport = async (
       unusedContentTypes.push(ct);
     }
   }
+  console.log('Unused Content Types:', unusedContentTypes);
 
   return unusedContentTypes;
 };
