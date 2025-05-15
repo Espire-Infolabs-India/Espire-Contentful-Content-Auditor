@@ -8,7 +8,7 @@ export const generateMediaReport = async (
 ) => {
   try {
     const assetsRes = await fetch(
-      `https://api.contentful.com/spaces/${spaceId}/environments/${environmentId}/assets?limit=1000`,
+      `https://api.contentful.com/spaces/${spaceId}/environments/${environmentId}/assets`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -34,7 +34,7 @@ export const generateMediaReport = async (
       );
 
       const usageData = await usageRes.json();
-      const isUsed = usageData.items.length > 0;
+      const isUsed = usageData.items?.length > 0;
 
       if (!isUsed) {
         unusedAssets.push(asset);
