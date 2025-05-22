@@ -7,8 +7,12 @@ import {
   Checkbox,
   Button,
   Flex,
+  Select
 } from '@contentful/f36-components';
 import { useState } from 'react';
+import { DeleteIcon, ChevronDownIcon } from '@contentful/f36-icons';
+import PaginationWithTotalAndViewPerPageExample from '../../locations/PaginationWithTotal';
+
 
 type Props = {
   entries: any[];
@@ -45,26 +49,39 @@ const UnusedEntriesTable = ({ entries, onDeleteSelected }: Props) => {
   return (
     <>
       <Flex justifyContent="space-between" marginBottom="spacingM">
+        <Select
+          id="optionSelect-controlled"
+          name="optionSelect-controlled"
+          value="Sort by"
+          className='mb'
+          size="medium"
+    >
+          <Select.Option value="optionOne"> 
+ Sort by</Select.Option>
+        </Select>
+        
+      </Flex>
+      <Flex justifyContent="space-between" marginBottom="spacingM">
         <Button
           variant="negative"
           isDisabled={selectedIds.length === 0}
           onClick={handleDeleteClick}
         >
-          Delete Selected
+        <span className="flex-design align-item-center"><DeleteIcon size="small" />  Delete Selected</span>
         </Button>
-        <Checkbox
-          isChecked={selectedIds.length === entries.length}
-          onChange={(e) => handleSelectAll(e.target.checked)}
-          aria-label="Select All"
-        >
-          Select All
-        </Checkbox>
+
       </Flex>
 
       <Table className="mt-4">
         <TableHead>
           <TableRow>
-            <TableCell>Select</TableCell>
+            <TableCell>  <Checkbox
+          isChecked={selectedIds.length === entries.length}
+          onChange={(e) => handleSelectAll(e.target.checked)}
+          aria-label="Select All"
+        >
+          Select All
+        </Checkbox>  </TableCell>
             <TableCell>ID</TableCell>
             <TableCell>Content Type</TableCell>
           </TableRow>
@@ -85,6 +102,7 @@ const UnusedEntriesTable = ({ entries, onDeleteSelected }: Props) => {
           ))}
         </TableBody>
       </Table>
+       <PaginationWithTotalAndViewPerPageExample />
     </>
   );
 };
