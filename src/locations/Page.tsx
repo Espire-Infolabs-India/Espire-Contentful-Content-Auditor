@@ -120,7 +120,7 @@ const Page = () => {
 
   const handleGenerateUnusedContentTypeReport = async () => {
     if (!accessToken || !spaceId || !environmentId) return;
-    resetReports(); 
+    resetReports();
     setActiveReport("types");
     setLoadingState("types");
     try {
@@ -236,7 +236,7 @@ const Page = () => {
             isDisabled={!accessToken || loadingState !== null}
           >
             <span className="flex-design align-item-center">
-              <AssetIcon size="small" /> Media Report
+              <AssetIcon size="small" /> Unused Media Report
             </span>
           </Button>
           <Button
