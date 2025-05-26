@@ -1,15 +1,13 @@
 import { useEffect, useState } from "react";
 import {
   Button,
-  Spinner,
-  Heading,
-  Flex,
   Paragraph,
-  Select,
   Checkbox,
   Text,
   Box,
-  TextInput
+  Flex,
+  Heading,
+  Spinner,
 } from "@contentful/f36-components";
 import { PageAppSDK } from "@contentful/app-sdk";
 import { useSDK } from "@contentful/react-apps-toolkit";
@@ -20,35 +18,42 @@ import { generateUnusedContentTypesReport } from "../lib/generateUnusedContentTy
 import { getSpaceDetails } from "../lib/getSpaceDetails";
 import { getCmaToken } from "../lib/getAppParameters";
 import { fetchContentTypes } from "../lib/fetchContentTypes";
-import UnusedEntriesTable from "../components/Reports/UnusedEntriesTable";
+import GenerateEntryReport from "../components/Reports/GenerateEntryReport";
 import { deleteEntries } from "../lib/deleteEntries";
-import  '../styles/global.css';
+import ContentTypeSelector from "../components/ContentTypeSelector/ContentTypeSelector";
+import GenerateMediaReport from "../components/Reports/GenerateMediaReport";
+import "../styles/global.css";
 import NotFound from "./NotFound";
-import { PageIcon, AssetIcon, FolderOpenIcon } from '@contentful/f36-icons';
-
+import { PageIcon, AssetIcon, FolderOpenIcon } from "@contentful/f36-icons";
+import GenerateUnusedContentTypesReport from "../components/Reports/GenerateUnusedContentTypesReport";
 
 const Page = () => {
   const sdk = useSDK<PageAppSDK>();
-
   const [accessToken, setAccessToken] = useState("");
   const [spaceName, setSpaceName] = useState("");
   const [spaceId, setSpaceId] = useState("");
   const [environmentId, setEnvironmentId] = useState("");
-
   const [contentTypes, setContentTypes] = useState<any[]>([]);
   const [selectedContentType, setSelectedContentType] = useState("");
   const [fetchingTypes, setFetchingTypes] = useState(false);
-
   const [unusedEntries, setUnusedEntries] = useState<any[]>([]);
   const [unusedMedia, setUnusedMedia] = useState<any[]>([]);
   const [unusedContentTypes, setUnusedContentTypes] = useState<any[]>([]);
   const [selectedAssets, setSelectedAssets] = useState<string[]>([]);
-
-  const [loadingState, setLoadingState] = useState<"entries" | "media" | "types" | null>(null);
+  const [selectedContentTypes, setSelectedContentTypes] = useState<string[]>(
+    []
+  );
+  const [loadingState, setLoadingState] = useState<
+    "entries" | "media" | "types" | null
+  >(null);
   const [hasGenerated, setHasGenerated] = useState(false);
-
   const [showContentTypeDropdown, setShowContentTypeDropdown] = useState(false);
   const [isGeneratingEntryReport, setIsGeneratingEntryReport] = useState(false);
+  const [page, setPage] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [activeReport, setActiveReport] = useState<"entry" | "media" | "types">(
+    "entry"
+  );
 
   useEffect(() => {
     const initialize = async () => {
@@ -56,7 +61,6 @@ const Page = () => {
       setSpaceId(spaceId);
       setEnvironmentId(environmentId);
       setSpaceName(spaceName);
-
       const token = getCmaToken(sdk);
       if (token) setAccessToken(token);
     };
@@ -66,10 +70,13 @@ const Page = () => {
   useEffect(() => {
     const fetchTypes = async () => {
       if (!accessToken || !spaceId || !environmentId) return;
-
       setFetchingTypes(true);
       try {
-        const data = await fetchContentTypes(spaceId, environmentId, accessToken);
+        const data = await fetchContentTypes(
+          spaceId,
+          environmentId,
+          accessToken
+        );
         setContentTypes(data.items);
         if (data.items.length > 0) setSelectedContentType(data.items[0].sys.id);
       } catch (err) {
@@ -85,15 +92,17 @@ const Page = () => {
     setUnusedEntries([]);
     setUnusedMedia([]);
     setUnusedContentTypes([]);
+    setSelectedContentTypes([]);
     setHasGenerated(false);
+    setPage(0);
+    setItemsPerPage(20);
   };
 
   const handleGenerateMediaReport = async () => {
     if (!spaceId || !environmentId || !accessToken) return;
-
     resetReports();
+    setActiveReport("media");
     setLoadingState("media");
-
     try {
       await generateMediaReport(
         accessToken,
@@ -111,12 +120,15 @@ const Page = () => {
 
   const handleGenerateUnusedContentTypeReport = async () => {
     if (!accessToken || !spaceId || !environmentId) return;
-
-    resetReports();
+    resetReports(); 
+    setActiveReport("types");
     setLoadingState("types");
-
     try {
-      const result = await generateUnusedContentTypesReport(accessToken, spaceId, environmentId);
+      const result = await generateUnusedContentTypesReport(
+        accessToken,
+        spaceId,
+        environmentId
+      );
       setUnusedContentTypes(result);
       setHasGenerated(true);
     } catch (error) {
@@ -126,18 +138,25 @@ const Page = () => {
     }
   };
 
-  const handleDeleteEntries = (entryIds: string[]) => {
-    deleteEntries(entryIds, accessToken, spaceId, environmentId, () => {
-      setUnusedEntries([]);
-      setHasGenerated(false);
-    });
-  };
-
-  const handleDeleteAssets = () => {
-    deleteAssets(selectedAssets, accessToken, spaceId, environmentId, () => {
-      setSelectedAssets([]);
-      handleGenerateMediaReport();
-    });
+  const handleDeleteContentTypes = async () => {
+    for (const typeId of selectedContentTypes) {
+      try {
+        await fetch(
+          `https://api.contentful.com/spaces/${spaceId}/environments/${environmentId}/content_types/${typeId}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+      } catch (error) {
+        console.warn(`Failed to delete content type ${typeId}:`, error);
+      }
+    }
+    setSelectedContentTypes([]);
+    await handleGenerateUnusedContentTypeReport();
   };
 
   const toggleAssetSelection = (assetId: string) => {
@@ -148,12 +167,31 @@ const Page = () => {
     );
   };
 
+  const toggleContentTypeSelection = (id: string) => {
+    setSelectedContentTypes((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleDeleteAssets = () => {
+    deleteAssets(selectedAssets, accessToken, spaceId, environmentId, () => {
+      setSelectedAssets([]);
+      handleGenerateMediaReport();
+    });
+  };
+
+  const handleDeleteEntries = (entryIds: string[]) => {
+    deleteEntries(entryIds, accessToken, spaceId, environmentId, () => {
+      setUnusedEntries([]);
+      setHasGenerated(false);
+    });
+  };
+
   const handleEntryReportSelect = async (contentTypeId: string) => {
     setSelectedContentType(contentTypeId);
     setIsGeneratingEntryReport(true);
     setLoadingState("entries");
     resetReports();
-
     try {
       await generateReport(
         accessToken,
@@ -171,134 +209,141 @@ const Page = () => {
       setShowContentTypeDropdown(false);
     }
   };
-
   return (
     <Flex flexDirection="column" gap="spacingM">
-      <Heading className="hidden">Unused Entries Report</Heading>
-      <Paragraph className="hidden">
-        <strong>Current Space ID:</strong> {spaceId}<br />
-        <strong>Current Space Name:</strong> {spaceName}<br />
-        <strong>Current Environment ID:</strong> {environmentId}
-      </Paragraph>
-
-    <Box className="flex-design flex-direction-row">
-      <Flex gap="spacing2Xs" className="flex-design flex-direction left-side-menu flex-item-left border-right">
-        <Button
-          variant="primary"
-          onClick={() => {
-            setShowContentTypeDropdown(true);
-            resetReports();
-          }}
-          isDisabled={!accessToken || loadingState !== null}
+      <Box className="flex-design flex-direction-row">
+        <Flex
+          gap="spacing2Xs"
+          className="flex-design flex-direction left-side-menu flex-item-left border-right"
         >
-         <span className="flex-design align-item-center"><PageIcon size="small" /> Generate Entry Report</span>
-        </Button>
-        <Button
-          variant="secondary"
-          onClick={handleGenerateMediaReport}
-          isLoading={loadingState === "media"}
-          isDisabled={!accessToken || loadingState !== null}
-        >
-         <span className="flex-design align-item-center"><AssetIcon size="small" /> Generate Media Report</span>
-        </Button>
-        <Button
-          variant="secondary"
-          onClick={handleGenerateUnusedContentTypeReport}
-          isLoading={loadingState === "types"}
-          isDisabled={!accessToken || loadingState !== null}
-        >
-        <span className="flex-design align-item-center"><FolderOpenIcon size="small" /> Generate Unused Content Types Report</span> 
-        </Button>
-      </Flex>
-
-          <Box className="flex-item-right">
-      {contentTypes && !fetchingTypes && contentTypes.length > 0 && (
-       <Flex flexDirection="column" gap="spacingXs" alignItems="flex-start" >
-          <Heading className="h1">Generate Entry Report</Heading>
-          
-          <Flex className="border content-type-wrap mb">
-            <Box className="content-type-box">Content Type</Box>
-          <Select
-            value={selectedContentType}
-            isDisabled={isGeneratingEntryReport}
-            onChange={(e) => handleEntryReportSelect(e.target.value)}
-            className="selectbox"
-           
+          <Button
+            variant={activeReport === "entry" ? "primary" : "secondary"}
+            onClick={() => {
+              setActiveReport("entry");
+              setShowContentTypeDropdown(true);
+              resetReports();
+            }}
+            isDisabled={!accessToken || loadingState !== null}
           >
-            {contentTypes.map((ct) => (
-              <Select.Option key={ct.sys.id} value={ct.sys.id}>
-                {ct.name || ct.displayField || ct.sys.id}
-              </Select.Option>
-            ))}
-          </Select>
-          <TextInput
-          size="medium"
-          className="type-search"
-        placeholder="Type to search for entries"
-      />
-           </Flex>
-          {isGeneratingEntryReport && <Spinner size="medium" />}
-           
+            <span className="flex-design align-item-center">
+              <PageIcon size="small" /> Unlinked Content Entries Report
+            </span>
+          </Button>
+          <Button
+            variant={activeReport === "media" ? "primary" : "secondary"}
+            onClick={handleGenerateMediaReport}
+            isLoading={loadingState === "media"}
+            isDisabled={!accessToken || loadingState !== null}
+          >
+            <span className="flex-design align-item-center">
+              <AssetIcon size="small" /> Media Report
+            </span>
+          </Button>
+          <Button
+            variant={activeReport === "types" ? "primary" : "secondary"}
+            onClick={handleGenerateUnusedContentTypeReport}
+            isLoading={loadingState === "types"}
+            isDisabled={!accessToken || loadingState !== null}
+          >
+            <span className="flex-design align-item-center">
+              <FolderOpenIcon size="small" /> Unused Content Types Report
+            </span>
+          </Button>
         </Flex>
-        
-        
-      )}
-      
-      {!loadingState && hasGenerated &&
-        unusedEntries.length === 0 &&
-        unusedMedia.length === 0 &&
-        unusedContentTypes.length === 0 && (
-        <Paragraph>🎉 No unused entries, media, or content types found!</Paragraph>
-      )}
 
-      {unusedEntries.length > 0 ? (
-        <UnusedEntriesTable entries={unusedEntries} onDeleteSelected={handleDeleteEntries} />
-      ) : <NotFound />}
-
-      {unusedMedia.length > 0 && (
-        <>
-          <Heading as="h3">Unused Media Items</Heading>
-          <Box style={{ maxHeight: "300px", overflowY: "auto", border: "1px solid #ccc", padding: "8px" }}>
-            <Flex flexDirection="column" gap="spacingXs">
-              {unusedMedia.map((asset) => (
-                <Checkbox
-                  key={asset.sys.id}
-                  isChecked={selectedAssets.includes(asset.sys.id)}
-                  onChange={() => toggleAssetSelection(asset.sys.id)}
+        <Box className="flex-item-right">
+          {activeReport === "entry" && (
+            <>
+              {fetchingTypes ? (
+                <Flex
+                  justifyContent="center"
+                  alignItems="center"
+                  padding="spacingL"
                 >
-                  {asset.fields?.title?.["en-US"] || asset.sys.id}
-                </Checkbox>
-              ))}
-            </Flex>
-          </Box>
-          <Flex marginTop="spacingS">
-            <Button
-              variant="negative"
-              onClick={handleDeleteAssets}
-              isDisabled={selectedAssets.length === 0}
-            >
-              Delete Selected Media
-            </Button>
-          </Flex>
-        </>
-      )}
+                  <Spinner size="large" />
+                </Flex>
+              ) : contentTypes.length === 0 ? (
+                <NotFound />
+              ) : (
+                <ContentTypeSelector
+                  contentTypes={contentTypes}
+                  selectedContentType={selectedContentType}
+                  isGeneratingEntryReport={isGeneratingEntryReport}
+                  onSelectContentType={handleEntryReportSelect}
+                />
+              )}
 
-      {unusedContentTypes.length > 0 && (
-        <>
-          <Heading as="h3">Unused Content Types</Heading>
-          <Flex flexDirection="column" gap="spacingXs">
-            {unusedContentTypes.map((ct) => (
-              <Text key={ct.sys.id}>
-                {ct.name || ct.displayField || ct.sys.id}
-              </Text>
-            ))}
-          </Flex>
-        </>
-      )}
-      </Box>
+              {selectedContentType && !isGeneratingEntryReport && (
+                <>
+                  {unusedEntries.length > 0 ? (
+                    <GenerateEntryReport
+                      entries={unusedEntries}
+                      onDeleteSelected={handleDeleteEntries}
+                      page={page}
+                      itemsPerPage={itemsPerPage}
+                      onPageChange={setPage}
+                      onItemsPerPageChange={(count) => {
+                        setPage(Math.floor((itemsPerPage * page + 1) / count));
+                        setItemsPerPage(count);
+                      }}
+                    />
+                  ) : (
+                    <NotFound />
+                  )}
+                </>
+              )}
+            </>
+          )}
+
+          {activeReport === "media" && (
+            <>
+              {loadingState === "media" ? (
+                <Flex
+                  justifyContent="center"
+                  alignItems="center"
+                  padding="spacingL"
+                >
+                  <Spinner size="large" />
+                </Flex>
+              ) : unusedMedia.length > 0 ? (
+                <GenerateMediaReport
+                  unusedMedia={unusedMedia}
+                  selectedAssets={selectedAssets}
+                  toggleAssetSelection={toggleAssetSelection}
+                  handleDeleteAssets={handleDeleteAssets}
+                />
+              ) : (
+                <NotFound />
+              )}
+            </>
+          )}
+
+          {activeReport === "types" && (
+            <>
+              {loadingState === "types" ? (
+                <Flex
+                  justifyContent="center"
+                  alignItems="center"
+                  padding="spacingL"
+                >
+                  <Spinner size="large" />
+                </Flex>
+              ) : unusedContentTypes.length > 0 ? (
+                <GenerateUnusedContentTypesReport
+                  unusedContentTypes={unusedContentTypes}
+                  isLoading={false}
+                  selectedTypes={selectedContentTypes}
+                  toggleTypeSelection={toggleContentTypeSelection}
+                  handleDeleteTypes={handleDeleteContentTypes}
+                />
+              ) : (
+                <NotFound />
+              )}
+            </>
+          )}
+        </Box>
       </Box>
     </Flex>
-    
   );
 };
 
