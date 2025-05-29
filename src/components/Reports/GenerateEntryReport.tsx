@@ -94,7 +94,6 @@ const GenerateEntryReport = ({
           id="optionSelect-controlled"
           name="optionSelect-controlled"
           value="Sort by"
-          className="mb"
           size="medium"
         >
           <Select.Option value="optionOne">Sort by</Select.Option>
@@ -107,7 +106,7 @@ const GenerateEntryReport = ({
           onClick={handleDeleteClick}
         >
           <span className="flex-design align-item-center">
-            <DeleteIcon size="small" /> Delete Selected
+            Delete Selected
           </span>
         </Button>
       </Flex>

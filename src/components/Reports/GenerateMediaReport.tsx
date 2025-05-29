@@ -75,7 +75,7 @@ const GenerateMediaReport = ({
 
   return (
     <>
-      <Heading as="h3">Unused Media Items</Heading>
+      <Heading className="h1">Unused Media Items</Heading>
 
       <Flex justifyContent="space-between" marginBottom="spacingM">
         <Button
@@ -84,7 +84,7 @@ const GenerateMediaReport = ({
           onClick={handleDeleteAssets}
         >
           <span className="flex-design align-item-center">
-            <DeleteIcon size="small" /> Delete Selected
+            Delete Selected
           </span>
         </Button>
       </Flex>
