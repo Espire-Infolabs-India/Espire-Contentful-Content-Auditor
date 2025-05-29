@@ -30,6 +30,7 @@ const statusColorMap: Record<
   draft: "warning",
   archived: "secondary",
 };
+
 const capitalizeFirst = (str: string) =>
   str.charAt(0).toUpperCase() + str.slice(1);
 
@@ -40,6 +41,7 @@ type Props = {
   itemsPerPage: number;
   onPageChange: (page: number) => void;
   onItemsPerPageChange: (count: number) => void;
+  searchQuery: string;
 };
 
 const GenerateEntryReport = ({
@@ -49,6 +51,7 @@ const GenerateEntryReport = ({
   itemsPerPage,
   onPageChange,
   onItemsPerPageChange,
+  searchQuery,
 }: Props) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
@@ -75,30 +78,27 @@ const GenerateEntryReport = ({
     );
   };
 
-  const paginatedEntries = entries.slice(
-    page * itemsPerPage,
-    (page + 1) * itemsPerPage
-  );
-  const paginatedIds = paginatedEntries.map((e) => e.sys.id);
-
   const getDisplayName = (entry: any): string => {
     if (!entry?.fields) return entry?.sys?.id;
     for (const key in entry?.fields) {
       const value = entry?.fields[key];
-      if (typeof value === "string") {
-        return value;
-      }
-      if (
-        typeof value === "object" &&
-        value !== null &&
-        typeof value["en-US"] === "string"
-      ) {
-        return value["en-US"];
-      }
+      if (typeof value === "string") return value;
+      if (typeof value === "object" && value?.["en-US"]) return value["en-US"];
     }
-
     return entry?.sys?.id;
   };
+
+  const filteredEntries = entries.filter((entry) => {
+    const name = getDisplayName(entry).toLowerCase();
+    return name.includes(searchQuery.toLowerCase());
+  });
+
+  const paginatedEntries = filteredEntries.slice(
+    page * itemsPerPage,
+    (page + 1) * itemsPerPage
+  );
+
+  const paginatedIds = paginatedEntries.map((e) => e.sys.id);
 
   return (
     <>
@@ -124,7 +124,6 @@ const GenerateEntryReport = ({
           </span>
         </Button>
       </Flex>
-
       <Table className="mt-4">
         <TableHead>
           <TableRow>
@@ -161,16 +160,13 @@ const GenerateEntryReport = ({
                 {entry?.sys?.updatedAt
                   ? (() => {
                       const date = new Date(entry?.sys?.updatedAt);
-
-                      if (isFuture(date)) {
-                        return formatDistanceToNow(date, { addSuffix: true }); // e.g., "in 2 minutes"
-                      } else if (isToday(date)) {
+                      if (isFuture(date))
+                        return formatDistanceToNow(date, { addSuffix: true });
+                      if (isToday(date))
                         return `Today at ${format(date, "h:mm a")}`;
-                      } else if (isYesterday(date)) {
+                      if (isYesterday(date))
                         return `Yesterday at ${format(date, "h:mm a")}`;
-                      } else {
-                        return format(date, "dd MMM yyyy");
-                      }
+                      return format(date, "dd MMM yyyy");
                     })()
                   : "—"}
               </TableCell>
@@ -179,10 +175,8 @@ const GenerateEntryReport = ({
                   const statusRaw = entry?.sys?.archivedAt
                     ? "archived"
                     : entry.sys?.fieldStatus?.["*"]?.["en-US"] || "draft";
-
                   const status = capitalizeFirst(statusRaw);
                   const variant = statusColorMap[statusRaw] ?? "default";
-
                   return <Badge variant={variant}>{status}</Badge>;
                 })()}
               </TableCell>
@@ -190,11 +184,10 @@ const GenerateEntryReport = ({
           ))}
         </TableBody>
       </Table>
-
       <PaginationControl
         page={page}
         itemsPerPage={itemsPerPage}
-        totalItems={entries.length}
+        totalItems={filteredEntries.length}
         onPageChange={onPageChange}
         onViewPerPageChange={(i) => {
           onPageChange(Math.floor((itemsPerPage * page + 1) / i));

@@ -12,6 +12,8 @@ type Props = {
   selectedContentType: string;
   isGeneratingEntryReport: boolean;
   onSelectContentType: (id: string) => void;
+  searchQuery: string;
+  onSearchQueryChange: (value: string) => void;
 };
 
 const ContentTypeSelector = ({
@@ -19,6 +21,8 @@ const ContentTypeSelector = ({
   selectedContentType,
   isGeneratingEntryReport,
   onSelectContentType,
+  searchQuery,
+  onSearchQueryChange,
 }: Props) => {
   if (!contentTypes || contentTypes?.length === 0) return null;
 
@@ -43,6 +47,8 @@ const ContentTypeSelector = ({
           size="medium"
           className="type-search"
           placeholder="Type to search for entries"
+          value={searchQuery}
+          onChange={(e) => onSearchQueryChange(e.target.value)}
         />
       </Flex>
       {isGeneratingEntryReport && <Spinner size="medium" />}

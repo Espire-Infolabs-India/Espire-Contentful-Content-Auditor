@@ -54,6 +54,7 @@ const Page = () => {
   const [activeReport, setActiveReport] = useState<"entry" | "media" | "types">(
     "entry"
   );
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const initialize = async () => {
@@ -96,6 +97,7 @@ const Page = () => {
     setHasGenerated(false);
     setPage(0);
     setItemsPerPage(20);
+    setSearchQuery("");
   };
 
   const handleGenerateMediaReport = async () => {
@@ -209,6 +211,7 @@ const Page = () => {
       setShowContentTypeDropdown(false);
     }
   };
+
   return (
     <Flex flexDirection="column" gap="spacingM">
       <Box className="flex-design flex-direction-row">
@@ -270,6 +273,8 @@ const Page = () => {
                   selectedContentType={selectedContentType}
                   isGeneratingEntryReport={isGeneratingEntryReport}
                   onSelectContentType={handleEntryReportSelect}
+                  searchQuery={searchQuery}
+                  onSearchQueryChange={setSearchQuery}
                 />
               )}
 
@@ -286,6 +291,7 @@ const Page = () => {
                         setPage(Math.floor((itemsPerPage * page + 1) / count));
                         setItemsPerPage(count);
                       }}
+                      searchQuery={searchQuery}
                     />
                   ) : (
                     <NotFound />
