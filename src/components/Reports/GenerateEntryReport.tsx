@@ -7,11 +7,13 @@ import {
   Checkbox,
   Button,
   Flex,
-  Select,
   Badge,
+  Menu,
+  MenuItem,
+  Popover,
 } from "@contentful/f36-components";
+import { SortIcon, DeleteIcon } from "@contentful/f36-icons";
 import { useState } from "react";
-import { DeleteIcon } from "@contentful/f36-icons";
 import PaginationControl from "../../locations/PaginationWithTotal";
 import {
   format,
@@ -54,6 +56,10 @@ const GenerateEntryReport = ({
   searchQuery,
 }: Props) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [sortOrder, setSortOrder] = useState<
+    "nameAsc" | "nameDesc" | "newest" | "oldest"
+  >("newest");
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const toggleSelect = (checked: boolean, entryId: string) => {
     setSelectedIds(
@@ -88,10 +94,22 @@ const GenerateEntryReport = ({
     return entry?.sys?.id;
   };
 
-  const filteredEntries = entries.filter((entry) => {
-    const name = getDisplayName(entry).toLowerCase();
-    return name.includes(searchQuery.toLowerCase());
-  });
+  const filteredEntries = entries
+    .filter((entry) => {
+      const name = getDisplayName(entry).toLowerCase();
+      return name.includes(searchQuery.toLowerCase());
+    })
+    .sort((a, b) => {
+      const nameA = getDisplayName(a).toLowerCase();
+      const nameB = getDisplayName(b).toLowerCase();
+      const dateA = new Date(a.sys.updatedAt).getTime();
+      const dateB = new Date(b.sys.updatedAt).getTime();
+
+      if (sortOrder === "nameAsc") return nameA.localeCompare(nameB);
+      if (sortOrder === "nameDesc") return nameB.localeCompare(nameA);
+      if (sortOrder === "newest") return dateB - dateA;
+      return dateA - dateB;
+    });
 
   const paginatedEntries = filteredEntries.slice(
     page * itemsPerPage,
@@ -103,17 +121,62 @@ const GenerateEntryReport = ({
   return (
     <>
       <Flex justifyContent="space-between" marginBottom="spacingM">
-        <Select
-          id="optionSelect-controlled"
-          name="optionSelect-controlled"
-          value="Sort by"
-          className="mb"
-          size="medium"
+        <Popover
+          isOpen={isMenuOpen}
+          onClose={() => setIsMenuOpen(false)}
+          placement="bottom-start"
         >
-          <Select.Option value="optionOne">Sort by</Select.Option>
-        </Select>
-      </Flex>
-      <Flex justifyContent="space-between" marginBottom="spacingM">
+          <Popover.Trigger>
+            <Button
+              variant="secondary"
+              startIcon={<SortIcon />}
+              onClick={() => setIsMenuOpen((prev) => !prev)}
+            >
+              Sort by
+            </Button>
+          </Popover.Trigger>
+          <Popover.Content>
+            <Menu>
+              <MenuItem
+                isActive={sortOrder === "nameAsc"}
+                onClick={() => {
+                  setSortOrder("nameAsc");
+                  setIsMenuOpen(false);
+                }}
+              >
+                Name: A–Z
+              </MenuItem>
+              <MenuItem
+                isActive={sortOrder === "nameDesc"}
+                onClick={() => {
+                  setSortOrder("nameDesc");
+                  setIsMenuOpen(false);
+                }}
+              >
+                Name: Z–A
+              </MenuItem>
+              <MenuItem
+                isActive={sortOrder === "newest"}
+                onClick={() => {
+                  setSortOrder("newest");
+                  setIsMenuOpen(false);
+                }}
+              >
+                Updated: newest
+              </MenuItem>
+              <MenuItem
+                isActive={sortOrder === "oldest"}
+                onClick={() => {
+                  setSortOrder("oldest");
+                  setIsMenuOpen(false);
+                }}
+              >
+                Updated: oldest
+              </MenuItem>
+            </Menu>
+          </Popover.Content>
+        </Popover>
+
         <Button
           variant="negative"
           isDisabled={selectedIds.length === 0}
@@ -124,6 +187,7 @@ const GenerateEntryReport = ({
           </span>
         </Button>
       </Flex>
+
       <Table className="mt-4">
         <TableHead>
           <TableRow>
@@ -184,6 +248,7 @@ const GenerateEntryReport = ({
           ))}
         </TableBody>
       </Table>
+
       <PaginationControl
         page={page}
         itemsPerPage={itemsPerPage}
