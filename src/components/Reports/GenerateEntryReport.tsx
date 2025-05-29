@@ -33,12 +33,6 @@ const statusColorMap: Record<
 const capitalizeFirst = (str: string) =>
   str.charAt(0).toUpperCase() + str.slice(1);
 
-const getAssetStatus = (asset: any): string => {
-  if (asset.sys.archivedAt) return "Archived";
-  const status =
-    asset.sys.fieldStatus?.["*"]?.["en-US"] || asset.sys.status || "Unknown";
-  return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
-};
 type Props = {
   entries: any[];
   onDeleteSelected: (entryIds: string[]) => void;
@@ -86,6 +80,25 @@ const GenerateEntryReport = ({
     (page + 1) * itemsPerPage
   );
   const paginatedIds = paginatedEntries.map((e) => e.sys.id);
+
+  const getDisplayName = (entry: any): string => {
+    if (!entry.fields) return entry.sys.id;
+    for (const key in entry.fields) {
+      const value = entry.fields[key];
+      if (typeof value === "string") {
+        return value;
+      }
+      if (
+        typeof value === "object" &&
+        value !== null &&
+        typeof value["en-US"] === "string"
+      ) {
+        return value["en-US"];
+      }
+    }
+
+    return entry.sys.id;
+  };
 
   return (
     <>
@@ -140,10 +153,7 @@ const GenerateEntryReport = ({
                   aria-label={`Select ${entry.sys.id}`}
                 />
               </TableCell>
-              <TableCell>
-                {entry.fields.title?.["en-US"] ||
-                  entry.fields.dataSourceName?.["en-US"]}
-              </TableCell>
+              <TableCell>{getDisplayName(entry)}</TableCell>
               <TableCell>{entry.sys.contentType.sys.id}</TableCell>
               <TableCell>
                 {entry?.sys?.updatedAt
