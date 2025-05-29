@@ -12,6 +12,8 @@ type Props = {
   selectedContentType: string;
   isGeneratingEntryReport: boolean;
   onSelectContentType: (id: string) => void;
+  searchQuery: string;
+  onSearchQueryChange: (value: string) => void;
 };
 
 const ContentTypeSelector = ({
@@ -19,8 +21,10 @@ const ContentTypeSelector = ({
   selectedContentType,
   isGeneratingEntryReport,
   onSelectContentType,
+  searchQuery,
+  onSearchQueryChange,
 }: Props) => {
-  if (!contentTypes || contentTypes.length === 0) return null;
+  if (!contentTypes || contentTypes?.length === 0) return null;
 
   return (
     <Flex flexDirection="column" gap="spacingXs" alignItems="flex-start">
@@ -35,7 +39,7 @@ const ContentTypeSelector = ({
         >
           {contentTypes.map((ct) => (
             <Select.Option key={ct.sys.id} value={ct.sys.id}>
-              {ct.name || ct.displayField || ct.sys.id}
+              {ct?.name || ct?.displayField || ct?.sys?.id}
             </Select.Option>
           ))}
         </Select>
@@ -43,6 +47,8 @@ const ContentTypeSelector = ({
           size="medium"
           className="type-search"
           placeholder="Type to search for entries"
+          value={searchQuery}
+          onChange={(e) => onSearchQueryChange(e.target.value)}
         />
       </Flex>
       {isGeneratingEntryReport && <Spinner size="medium" />}
