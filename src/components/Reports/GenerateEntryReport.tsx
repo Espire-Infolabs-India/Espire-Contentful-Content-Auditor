@@ -82,9 +82,9 @@ const GenerateEntryReport = ({
   const paginatedIds = paginatedEntries.map((e) => e.sys.id);
 
   const getDisplayName = (entry: any): string => {
-    if (!entry.fields) return entry.sys.id;
-    for (const key in entry.fields) {
-      const value = entry.fields[key];
+    if (!entry?.fields) return entry?.sys?.id;
+    for (const key in entry?.fields) {
+      const value = entry?.fields[key];
       if (typeof value === "string") {
         return value;
       }
@@ -97,7 +97,7 @@ const GenerateEntryReport = ({
       }
     }
 
-    return entry.sys.id;
+    return entry?.sys?.id;
   };
 
   return (
@@ -145,20 +145,22 @@ const GenerateEntryReport = ({
         </TableHead>
         <TableBody>
           {paginatedEntries.map((entry) => (
-            <TableRow key={entry.sys.id}>
+            <TableRow key={entry?.sys?.id}>
               <TableCell>
                 <Checkbox
-                  isChecked={selectedIds.includes(entry.sys.id)}
-                  onChange={(e) => toggleSelect(e.target.checked, entry.sys.id)}
-                  aria-label={`Select ${entry.sys.id}`}
+                  isChecked={selectedIds.includes(entry?.sys?.id)}
+                  onChange={(e) =>
+                    toggleSelect(e?.target?.checked, entry?.sys?.id)
+                  }
+                  aria-label={`Select ${entry?.sys?.id}`}
                 />
               </TableCell>
               <TableCell>{getDisplayName(entry)}</TableCell>
-              <TableCell>{entry.sys.contentType.sys.id}</TableCell>
+              <TableCell>{entry?.sys?.contentType?.sys?.id}</TableCell>
               <TableCell>
                 {entry?.sys?.updatedAt
                   ? (() => {
-                      const date = new Date(entry.sys.updatedAt);
+                      const date = new Date(entry?.sys?.updatedAt);
 
                       if (isFuture(date)) {
                         return formatDistanceToNow(date, { addSuffix: true }); // e.g., "in 2 minutes"
@@ -174,7 +176,7 @@ const GenerateEntryReport = ({
               </TableCell>
               <TableCell>
                 {(() => {
-                  const statusRaw = entry.sys.archivedAt
+                  const statusRaw = entry?.sys?.archivedAt
                     ? "archived"
                     : entry.sys?.fieldStatus?.["*"]?.["en-US"] || "draft";
 

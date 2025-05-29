@@ -20,7 +20,7 @@ const ContentTypeSelector = ({
   isGeneratingEntryReport,
   onSelectContentType,
 }: Props) => {
-  if (!contentTypes || contentTypes.length === 0) return null;
+  if (!contentTypes || contentTypes?.length === 0) return null;
 
   return (
     <Flex flexDirection="column" gap="spacingXs" alignItems="flex-start">
@@ -35,7 +35,7 @@ const ContentTypeSelector = ({
         >
           {contentTypes.map((ct) => (
             <Select.Option key={ct.sys.id} value={ct.sys.id}>
-              {ct.name || ct.displayField || ct.sys.id}
+              {ct?.name || ct?.displayField || ct?.sys?.id}
             </Select.Option>
           ))}
         </Select>
