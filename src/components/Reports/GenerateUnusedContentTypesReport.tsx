@@ -99,19 +99,19 @@ const GenerateUnusedContentTypesReport = ({
         </TableHead>
         <TableBody>
           {paginatedTypes.map((type) => (
-            <TableRow key={type.sys.id}>
+            <TableRow key={type?.sys?.id}>
               <TableCell>
                 <Checkbox
-                  isChecked={selectedTypes.includes(type.sys.id)}
-                  onChange={() => toggleTypeSelection(type.sys.id)}
-                  aria-label={`Select ${type.sys.id}`}
+                  isChecked={selectedTypes.includes(type?.sys?.id)}
+                  onChange={() => toggleTypeSelection(type?.sys?.id)}
+                  aria-label={`Select ${type?.sys?.id}`}
                 />
               </TableCell>
-              <TableCell>{type.name || type.sys.id}</TableCell>
-              <TableCell>{type.fields.length}</TableCell>
+              <TableCell>{type?.name || type?.sys?.id}</TableCell>
+              <TableCell>{type?.fields?.length}</TableCell>
               <TableCell>
-                {type.sys.updatedAt
-                  ? formatDistanceToNow(new Date(type.sys.updatedAt), {
+                {type?.sys?.updatedAt
+                  ? formatDistanceToNow(new Date(type?.sys?.updatedAt), {
                       addSuffix: true,
                     })
                   : ""}
@@ -124,7 +124,7 @@ const GenerateUnusedContentTypesReport = ({
       <PaginationControl
         page={page}
         itemsPerPage={itemsPerPage}
-        totalItems={unusedContentTypes.length}
+        totalItems={unusedContentTypes?.length}
         onPageChange={setPage}
         onViewPerPageChange={(count) => {
           setPage(Math.floor((itemsPerPage * page + 1) / count));

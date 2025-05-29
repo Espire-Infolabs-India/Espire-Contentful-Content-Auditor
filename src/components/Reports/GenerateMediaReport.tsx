@@ -29,9 +29,11 @@ const statusColorMap: Record<
 };
 
 const getAssetStatus = (asset: any): string => {
-  if (asset.sys.archivedAt) return "Archived";
+  if (asset?.sys?.archivedAt) return "Archived";
   const status =
-    asset.sys.fieldStatus?.["*"]?.["en-US"] || asset.sys.status || "Unknown";
+    asset?.sys?.fieldStatus?.["*"]?.["en-US"] ||
+    asset?.sys?.status ||
+    "Unknown";
   return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
 };
 type Props = {
@@ -58,7 +60,7 @@ const GenerateMediaReport = ({
     page * itemsPerPage,
     (page + 1) * itemsPerPage
   );
-  const paginatedIds = paginatedEntries.map((e) => e.sys.id);
+  const paginatedIds = paginatedEntries?.map((e) => e.sys.id);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -112,14 +114,14 @@ const GenerateMediaReport = ({
           {paginatedEntries.map((asset) => {
             const file = asset.fields?.file?.["en-US"];
             const fileUrl = file?.url?.startsWith("//")
-              ? `https:${file.url}`
+              ? `https:${file?.url}`
               : file?.url;
             const name =
               asset.fields?.name?.["en-US"] ||
               asset.fields?.title?.["en-US"] ||
               "(untitled)";
             const dimensions = file?.details?.image
-              ? `${file.details.image.width}px × ${file.details.image.height}px`
+              ? `${file?.details?.image?.width}px × ${file?.details?.image?.height}px`
               : "—";
             const types = file?.contentType || "—";
             const type = capitalizeFirst(types) || "—";
@@ -135,12 +137,12 @@ const GenerateMediaReport = ({
             const status = capitalizeFirst(statusRaw);
 
             return (
-              <TableRow key={asset.sys.id}>
+              <TableRow key={asset?.sys?.id}>
                 <TableCell>
                   <Checkbox
-                    isChecked={selectedAssets.includes(asset.sys.id)}
-                    onChange={() => toggleAssetSelection(asset.sys.id)}
-                    aria-label={`Select ${asset.sys.id}`}
+                    isChecked={selectedAssets.includes(asset?.sys?.id)}
+                    onChange={() => toggleAssetSelection(asset?.sys?.id)}
+                    aria-label={`Select ${asset?.sys?.id}`}
                   />
                 </TableCell>
                 <TableCell>
@@ -176,7 +178,7 @@ const GenerateMediaReport = ({
       <PaginationControl
         page={page}
         itemsPerPage={itemsPerPage}
-        totalItems={unusedMedia.length}
+        totalItems={unusedMedia?.length}
         onPageChange={setPage}
         onViewPerPageChange={(i) => {
           setPage(Math.floor((itemsPerPage * page + 1) / i));

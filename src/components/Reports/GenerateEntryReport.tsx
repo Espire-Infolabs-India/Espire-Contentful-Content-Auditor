@@ -7,11 +7,13 @@ import {
   Checkbox,
   Button,
   Flex,
-  Select,
   Badge,
+  Menu,
+  MenuItem,
+  Popover,
 } from "@contentful/f36-components";
+import { SortIcon, DeleteIcon } from "@contentful/f36-icons";
 import { useState } from "react";
-import { DeleteIcon } from "@contentful/f36-icons";
 import PaginationControl from "../../locations/PaginationWithTotal";
 import {
   format,
@@ -30,15 +32,10 @@ const statusColorMap: Record<
   draft: "warning",
   archived: "secondary",
 };
+
 const capitalizeFirst = (str: string) =>
   str.charAt(0).toUpperCase() + str.slice(1);
 
-const getAssetStatus = (asset: any): string => {
-  if (asset.sys.archivedAt) return "Archived";
-  const status =
-    asset.sys.fieldStatus?.["*"]?.["en-US"] || asset.sys.status || "Unknown";
-  return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
-};
 type Props = {
   entries: any[];
   onDeleteSelected: (entryIds: string[]) => void;
@@ -46,6 +43,7 @@ type Props = {
   itemsPerPage: number;
   onPageChange: (page: number) => void;
   onItemsPerPageChange: (count: number) => void;
+  searchQuery: string;
 };
 
 const GenerateEntryReport = ({
@@ -55,8 +53,13 @@ const GenerateEntryReport = ({
   itemsPerPage,
   onPageChange,
   onItemsPerPageChange,
+  searchQuery,
 }: Props) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [sortOrder, setSortOrder] = useState<
+    "nameAsc" | "nameDesc" | "newest" | "oldest"
+  >("newest");
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const toggleSelect = (checked: boolean, entryId: string) => {
     setSelectedIds(
@@ -81,25 +84,99 @@ const GenerateEntryReport = ({
     );
   };
 
-  const paginatedEntries = entries.slice(
+  const getDisplayName = (entry: any): string => {
+    if (!entry?.fields) return entry?.sys?.id;
+    for (const key in entry?.fields) {
+      const value = entry?.fields[key];
+      if (typeof value === "string") return value;
+      if (typeof value === "object" && value?.["en-US"]) return value["en-US"];
+    }
+    return entry?.sys?.id;
+  };
+
+  const filteredEntries = entries
+    .filter((entry) => {
+      const name = getDisplayName(entry).toLowerCase();
+      return name.includes(searchQuery.toLowerCase());
+    })
+    .sort((a, b) => {
+      const nameA = getDisplayName(a).toLowerCase();
+      const nameB = getDisplayName(b).toLowerCase();
+      const dateA = new Date(a.sys.updatedAt).getTime();
+      const dateB = new Date(b.sys.updatedAt).getTime();
+
+      if (sortOrder === "nameAsc") return nameA.localeCompare(nameB);
+      if (sortOrder === "nameDesc") return nameB.localeCompare(nameA);
+      if (sortOrder === "newest") return dateB - dateA;
+      return dateA - dateB;
+    });
+
+  const paginatedEntries = filteredEntries.slice(
     page * itemsPerPage,
     (page + 1) * itemsPerPage
   );
+
   const paginatedIds = paginatedEntries.map((e) => e.sys.id);
 
   return (
     <>
       <Flex justifyContent="space-between" marginBottom="spacingM">
-        <Select
-          id="optionSelect-controlled"
-          name="optionSelect-controlled"
-          value="Sort by"
-          size="medium"
+        <Popover
+          isOpen={isMenuOpen}
+          onClose={() => setIsMenuOpen(false)}
+          placement="bottom-start"
         >
-          <Select.Option value="optionOne">Sort by</Select.Option>
-        </Select>
-      </Flex>
-      <Flex justifyContent="space-between" marginBottom="spacingM">
+          <Popover.Trigger>
+            <Button
+              variant="secondary"
+              startIcon={<SortIcon />}
+              onClick={() => setIsMenuOpen((prev) => !prev)}
+            >
+              Sort by
+            </Button>
+          </Popover.Trigger>
+          <Popover.Content>
+            <Menu>
+              <MenuItem
+                isActive={sortOrder === "nameAsc"}
+                onClick={() => {
+                  setSortOrder("nameAsc");
+                  setIsMenuOpen(false);
+                }}
+              >
+                Name: A–Z
+              </MenuItem>
+              <MenuItem
+                isActive={sortOrder === "nameDesc"}
+                onClick={() => {
+                  setSortOrder("nameDesc");
+                  setIsMenuOpen(false);
+                }}
+              >
+                Name: Z–A
+              </MenuItem>
+              <MenuItem
+                isActive={sortOrder === "newest"}
+                onClick={() => {
+                  setSortOrder("newest");
+                  setIsMenuOpen(false);
+                }}
+              >
+                Updated: newest
+              </MenuItem>
+              <MenuItem
+                isActive={sortOrder === "oldest"}
+                onClick={() => {
+                  setSortOrder("oldest");
+                  setIsMenuOpen(false);
+                }}
+              >
+                Updated: oldest
+              </MenuItem>
+            </Menu>
+          </Popover.Content>
+        </Popover>
+
         <Button
           variant="negative"
           isDisabled={selectedIds.length === 0}
@@ -131,45 +208,39 @@ const GenerateEntryReport = ({
         </TableHead>
         <TableBody>
           {paginatedEntries.map((entry) => (
-            <TableRow key={entry.sys.id}>
+            <TableRow key={entry?.sys?.id}>
               <TableCell>
                 <Checkbox
-                  isChecked={selectedIds.includes(entry.sys.id)}
-                  onChange={(e) => toggleSelect(e.target.checked, entry.sys.id)}
-                  aria-label={`Select ${entry.sys.id}`}
+                  isChecked={selectedIds.includes(entry?.sys?.id)}
+                  onChange={(e) =>
+                    toggleSelect(e?.target?.checked, entry?.sys?.id)
+                  }
+                  aria-label={`Select ${entry?.sys?.id}`}
                 />
               </TableCell>
-              <TableCell>
-                {entry.fields.title?.["en-US"] ||
-                  entry.fields.dataSourceName?.["en-US"]}
-              </TableCell>
-              <TableCell>{entry.sys.contentType.sys.id}</TableCell>
+              <TableCell>{getDisplayName(entry)}</TableCell>
+              <TableCell>{entry?.sys?.contentType?.sys?.id}</TableCell>
               <TableCell>
                 {entry?.sys?.updatedAt
                   ? (() => {
-                      const date = new Date(entry.sys.updatedAt);
-
-                      if (isFuture(date)) {
-                        return formatDistanceToNow(date, { addSuffix: true }); // e.g., "in 2 minutes"
-                      } else if (isToday(date)) {
+                      const date = new Date(entry?.sys?.updatedAt);
+                      if (isFuture(date))
+                        return formatDistanceToNow(date, { addSuffix: true });
+                      if (isToday(date))
                         return `Today at ${format(date, "h:mm a")}`;
-                      } else if (isYesterday(date)) {
+                      if (isYesterday(date))
                         return `Yesterday at ${format(date, "h:mm a")}`;
-                      } else {
-                        return format(date, "dd MMM yyyy");
-                      }
+                      return format(date, "dd MMM yyyy");
                     })()
                   : "—"}
               </TableCell>
               <TableCell>
                 {(() => {
-                  const statusRaw = entry.sys.archivedAt
+                  const statusRaw = entry?.sys?.archivedAt
                     ? "archived"
                     : entry.sys?.fieldStatus?.["*"]?.["en-US"] || "draft";
-
                   const status = capitalizeFirst(statusRaw);
                   const variant = statusColorMap[statusRaw] ?? "default";
-
                   return <Badge variant={variant}>{status}</Badge>;
                 })()}
               </TableCell>
@@ -181,7 +252,7 @@ const GenerateEntryReport = ({
       <PaginationControl
         page={page}
         itemsPerPage={itemsPerPage}
-        totalItems={entries.length}
+        totalItems={filteredEntries.length}
         onPageChange={onPageChange}
         onViewPerPageChange={(i) => {
           onPageChange(Math.floor((itemsPerPage * page + 1) / i));
