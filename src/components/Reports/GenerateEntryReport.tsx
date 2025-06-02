@@ -183,7 +183,7 @@ const GenerateEntryReport = ({
           onClick={handleDeleteClick}
         >
           <span className="flex-design align-item-center">
-            <DeleteIcon size="small" /> Delete Selected
+            Delete Selected
           </span>
         </Button>
       </Flex>

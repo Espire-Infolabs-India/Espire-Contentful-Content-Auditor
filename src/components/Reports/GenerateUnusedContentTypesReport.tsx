@@ -64,7 +64,7 @@ const GenerateUnusedContentTypesReport = ({
 
   return (
     <>
-      <Heading as="h3" marginBottom="spacingM">
+      <Heading className="h1" marginBottom="spacingM">
         Unused Content Types
       </Heading>
 
@@ -75,7 +75,7 @@ const GenerateUnusedContentTypesReport = ({
           onClick={handleDeleteTypes}
         >
           <span className="flex-design align-item-center">
-            <DeleteIcon size="small" /> Delete Selected
+            Delete Selected
           </span>
         </Button>
       </Flex>
