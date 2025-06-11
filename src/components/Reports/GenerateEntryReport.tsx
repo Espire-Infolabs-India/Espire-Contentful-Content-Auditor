@@ -136,7 +136,7 @@ const GenerateEntryReport = ({
                   <ChevronDownIcon />
                 )
               }
-              className="flexflex-design flex-direction-row-revese"
+              className="flex-design flex-direction-row-revese"
               onClick={() => setIsMenuOpen((prev) => !prev)}
             >
               Sort by

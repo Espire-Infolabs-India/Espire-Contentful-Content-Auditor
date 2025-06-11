@@ -27,6 +27,13 @@ const statusColorMap: Record<
   archived: "secondary",
 };
 
+type Props = {
+  unusedMedia: any[];
+  selectedAssets: string[];
+  toggleAssetSelection: (id: string) => void;
+  handleDeleteAssets: () => void;
+};
+
 const GenerateMediaReport = ({
   unusedMedia,
   selectedAssets,
@@ -49,7 +56,7 @@ const GenerateMediaReport = ({
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       const newSelections = paginatedIds.filter(
-        (id:boolean) => !selectedAssets.includes(id)
+        (id: string) => !selectedAssets.includes(id)
       );
       newSelections.forEach((id: string) => toggleAssetSelection(id));
     } else {
@@ -78,7 +85,7 @@ const GenerateMediaReport = ({
           <TableRow>
             <TableCell>
               <Checkbox
-                isChecked={paginatedIds.every((id: number) =>
+                isChecked={paginatedIds.every((id: string) =>
                   selectedAssets.includes(id)
                 )}
                 onChange={(e) => handleSelectAll(e.target.checked)}
@@ -112,7 +119,6 @@ const GenerateMediaReport = ({
                   addSuffix: true,
                 }).replace("about", "")
               : "—";
-            // const status = asset.sys.fieldStatus?.["*"]?.["en-US"] || "—";
             const statusRaw = asset.sys.archivedAt
               ? "archived"
               : asset.sys?.fieldStatus?.["*"]?.["en-US"];
