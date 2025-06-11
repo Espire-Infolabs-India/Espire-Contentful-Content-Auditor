@@ -12,7 +12,7 @@ import {
   MenuItem,
   Popover,
 } from "@contentful/f36-components";
-import { SortIcon, DeleteIcon } from "@contentful/f36-icons";
+import { ChevronDownIcon, ChevronUpIcon } from "@contentful/f36-icons";
 import { useState } from "react";
 import PaginationControl from "../../locations/PaginationWithTotal";
 import {
@@ -129,7 +129,14 @@ const GenerateEntryReport = ({
           <Popover.Trigger>
             <Button
               variant="secondary"
-              startIcon={<SortIcon />}
+              startIcon={
+                isMenuOpen && isMenuOpen ? (
+                  <ChevronUpIcon />
+                ) : (
+                  <ChevronDownIcon />
+                )
+              }
+              className="flexflex-design flex-direction-row-revese"
               onClick={() => setIsMenuOpen((prev) => !prev)}
             >
               Sort by
@@ -182,9 +189,7 @@ const GenerateEntryReport = ({
           isDisabled={selectedIds.length === 0}
           onClick={handleDeleteClick}
         >
-          <span className="flex-design align-item-center">
-            Delete Selected
-          </span>
+          <span className="flex-design align-item-center">Delete Selected</span>
         </Button>
       </Flex>
 

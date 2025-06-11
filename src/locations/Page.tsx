@@ -1,14 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  Button,
-  Paragraph,
-  Checkbox,
-  Text,
-  Box,
-  Flex,
-  Heading,
-  Spinner,
-} from "@contentful/f36-components";
+import { Button, Box, Flex, Spinner } from "@contentful/f36-components";
 import { PageAppSDK } from "@contentful/app-sdk";
 import { useSDK } from "@contentful/react-apps-toolkit";
 import { generateReport } from "../lib/generateReport";
@@ -30,7 +21,7 @@ import GenerateUnusedContentTypesReport from "../components/Reports/GenerateUnus
 const Page = () => {
   const sdk = useSDK<PageAppSDK>();
   const [accessToken, setAccessToken] = useState("");
-  const [spaceName, setSpaceName] = useState("");
+  const [, setSpaceName] = useState("");
   const [spaceId, setSpaceId] = useState("");
   const [environmentId, setEnvironmentId] = useState("");
   const [contentTypes, setContentTypes] = useState<any[]>([]);
@@ -46,8 +37,8 @@ const Page = () => {
   const [loadingState, setLoadingState] = useState<
     "entries" | "media" | "types" | null
   >(null);
-  const [hasGenerated, setHasGenerated] = useState(false);
-  const [showContentTypeDropdown, setShowContentTypeDropdown] = useState(false);
+  const [, setHasGenerated] = useState(false);
+  const [, setShowContentTypeDropdown] = useState(false);
   const [isGeneratingEntryReport, setIsGeneratingEntryReport] = useState(false);
   const [page, setPage] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(20);
@@ -228,9 +219,9 @@ const Page = () => {
             }}
             isDisabled={!accessToken || loadingState !== null}
           >
-            <span className="flex-design align-item-center">
+            <Box as="span" className="flex-design align-item-center">
               <PageIcon size="small" /> Unlinked Content Entries Report
-            </span>
+            </Box>
           </Button>
           <Button
             variant={activeReport === "media" ? "primary" : "secondary"}
@@ -238,9 +229,9 @@ const Page = () => {
             isLoading={loadingState === "media"}
             isDisabled={!accessToken || loadingState !== null}
           >
-            <span className="flex-design align-item-center">
+            <Box as="span" className="flex-design align-item-center">
               <AssetIcon size="small" /> Unused Media Report
-            </span>
+            </Box>
           </Button>
           <Button
             variant={activeReport === "types" ? "primary" : "secondary"}
@@ -248,9 +239,9 @@ const Page = () => {
             isLoading={loadingState === "types"}
             isDisabled={!accessToken || loadingState !== null}
           >
-            <span className="flex-design align-item-center">
+            <Box as="span" className="flex-design align-item-center">
               <FolderOpenIcon size="small" /> Unused Content Types Report
-            </span>
+            </Box>
           </Button>
         </Flex>
 
