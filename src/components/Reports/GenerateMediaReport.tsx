@@ -12,7 +12,6 @@ import {
   Badge,
 } from "@contentful/f36-components";
 import { useState } from "react";
-import { DeleteIcon } from "@contentful/f36-icons";
 import PaginationControl from "../../locations/PaginationWithTotal";
 import { formatDistanceToNow } from "date-fns";
 const capitalizeFirst = (str: string) =>
@@ -28,14 +27,6 @@ const statusColorMap: Record<
   archived: "secondary",
 };
 
-const getAssetStatus = (asset: any): string => {
-  if (asset?.sys?.archivedAt) return "Archived";
-  const status =
-    asset?.sys?.fieldStatus?.["*"]?.["en-US"] ||
-    asset?.sys?.status ||
-    "Unknown";
-  return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
-};
 type Props = {
   unusedMedia: any[];
   selectedAssets: string[];
@@ -65,11 +56,11 @@ const GenerateMediaReport = ({
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       const newSelections = paginatedIds.filter(
-        (id) => !selectedAssets.includes(id)
+        (id: string) => !selectedAssets.includes(id)
       );
-      newSelections.forEach((id) => toggleAssetSelection(id));
+      newSelections.forEach((id: string) => toggleAssetSelection(id));
     } else {
-      paginatedIds.forEach((id) => {
+      paginatedIds.forEach((id: string) => {
         if (selectedAssets.includes(id)) toggleAssetSelection(id);
       });
     }
@@ -85,9 +76,7 @@ const GenerateMediaReport = ({
           isDisabled={selectedAssets.length === 0}
           onClick={handleDeleteAssets}
         >
-          <span className="flex-design align-item-center">
-            Delete Selected
-          </span>
+          <span className="flex-design align-item-center">Delete Selected</span>
         </Button>
       </Flex>
 
@@ -96,7 +85,7 @@ const GenerateMediaReport = ({
           <TableRow>
             <TableCell>
               <Checkbox
-                isChecked={paginatedIds.every((id) =>
+                isChecked={paginatedIds.every((id: string) =>
                   selectedAssets.includes(id)
                 )}
                 onChange={(e) => handleSelectAll(e.target.checked)}
@@ -111,7 +100,7 @@ const GenerateMediaReport = ({
           </TableRow>
         </TableHead>
         <TableBody>
-          {paginatedEntries.map((asset) => {
+          {paginatedEntries.map((asset: any) => {
             const file = asset.fields?.file?.["en-US"];
             const fileUrl = file?.url?.startsWith("//")
               ? `https:${file?.url}`
@@ -130,7 +119,6 @@ const GenerateMediaReport = ({
                   addSuffix: true,
                 }).replace("about", "")
               : "—";
-            // const status = asset.sys.fieldStatus?.["*"]?.["en-US"] || "—";
             const statusRaw = asset.sys.archivedAt
               ? "archived"
               : asset.sys?.fieldStatus?.["*"]?.["en-US"];

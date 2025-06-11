@@ -57,6 +57,10 @@ body {
   flex-direction: row;
 }
 
+.flex-direction-row-revese {
+  flex-direction:row-reverse;
+}
+
 .flex-direction {
   flex-direction: column;
 }
@@ -75,6 +79,7 @@ body {
   flex: 100%;
   padding: 20px 24px 12px;
   height: 100vh;
+  overflow-y: auto;
 }
 
 .border {
@@ -207,7 +212,7 @@ select[data-test-id~="cf-ui-select"] {
   padding-top: 7px;
   padding-bottom: 7px;
   line-height: normal;
-  height: auto;
+  min-height: auto;
   box-shadow: rgba(25, 37, 50, 0.08) 0px 1px 0px;
 }
 

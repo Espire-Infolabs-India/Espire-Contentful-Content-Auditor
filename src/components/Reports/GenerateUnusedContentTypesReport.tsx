@@ -11,7 +11,6 @@ import {
   Flex,
   Spinner,
 } from "@contentful/f36-components";
-import { DeleteIcon } from "@contentful/f36-icons";
 import { useState } from "react";
 import PaginationControl from "../../locations/PaginationWithTotal";
 import { formatDistanceToNow } from "date-fns";
@@ -74,9 +73,7 @@ const GenerateUnusedContentTypesReport = ({
           isDisabled={selectedTypes.length === 0}
           onClick={handleDeleteTypes}
         >
-          <span className="flex-design align-item-center">
-            Delete Selected
-          </span>
+          <span className="flex-design align-item-center">Delete Selected</span>
         </Button>
       </Flex>
 
