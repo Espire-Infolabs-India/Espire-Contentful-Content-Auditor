@@ -1,79 +1,107 @@
-This project was bootstrapped with [Create Contentful App](https://github.com/contentful/create-contentful-app).
+# Content Auditor – Custom Contentful App
 
-## How to use
+Content Auditor is a custom-built app designed to help content teams maintain a clean and optimized content environment. It enables users to identify and manage unlinked entries, unused media assets, and outdated content structures across their workspace.
 
-Execute create-contentful-app with npm, npx or yarn to bootstrap the example:
+---
 
-```bash
-# npx
-npx create-contentful-app --typescript
+## Features
 
-# npm
-npm init contentful-app -- --typescript
+- Unlinked Content Entries Report  
+  Quickly find content entries that are no longer referenced in your published content.
 
-# Yarn
-yarn create contentful-app --typescript
-```
+- Unused Media Report  
+  Identify media assets (e.g., images, PDFs) that are not linked to any content and may be safely deleted.
 
-## Available Scripts
+- Unused Content Types Report  
+  Detect content types that have no associated entries and are safe to deprecate or remove.
 
-In the project directory, you can run:
+- Bulk Actions  
+  Select multiple unused entries or assets and delete them in a single step.
 
-#### `npm start`
+---
 
-Creates or updates your app definition in Contentful, and runs the app in development mode.
-Open your app to view it in the browser.
+## Installation
 
-The page will reload if you make edits.
-You will also see any lint errors in the console.
+1. Clone this repository:
 
-#### `npm run build`
+   git clone https://github.com/your-org/content-auditor.git
 
-Builds the app for production to the `build` folder.
-It correctly bundles React in production mode and optimizes the build for the best performance.
+2. Install dependencies:
 
-The build is minified and the filenames include the hashes.
-Your app is ready to be deployed!
+   npm install
 
-#### `npm run upload`
+3. Run the development server:
 
-Uploads the build folder to contentful and creates a bundle that is automatically activated.
-The command guides you through the deployment process and asks for all required arguments.
-Read [here](https://www.contentful.com/developers/docs/extensibility/app-framework/create-contentful-app/#deploy-with-contentful) for more information about the deployment process.
+   npm run dev
 
-#### `npm run upload-ci`
+---
 
-Similar to `npm run upload` it will upload your app to contentful and activate it. The only difference is  
-that with this command all required arguments are read from the environment variables, for example when you add
-the upload command to your CI pipeline.
+## Contentful App Requirements
 
-For this command to work, the following environment variables must be set:
+- A valid Contentful account with access to the desired space and environment.
 
-- `CONTENTFUL_ORG_ID` - The ID of your organization
-- `CONTENTFUL_APP_DEF_ID` - The ID of the app to which to add the bundle
-- `CONTENTFUL_ACCESS_TOKEN` - A personal [access token](https://www.contentful.com/developers/docs/references/content-management-api/#/reference/personal-access-tokens)
+- A Content Management API token.
 
-## Libraries to use
+- The app must be authorized and installed in your Contentful space (via App Framework).
 
-To make your app look and feel like Contentful use the following libraries:
+---
 
-- [Forma 36](https://f36.contentful.com/) – Contentful's design system
-- [Contentful Field Editors](https://www.contentful.com/developers/docs/extensibility/field-editors/) – Contentful's field editor React components
+## Usage
 
-## Using the `contentful-management` SDK
+Once installed and authorized:
 
-In the default create contentful app output, a contentful management client is
-passed into each location. This can be used to interact with Contentful's
-management API. For example
+1. Go to the Apps tab in Contentful.
 
-```js
-// Use the client
-cma.locale.getMany({}).then((locales) => console.log(locales));
-```
+2. Select Content Auditor.
 
-Visit the [`contentful-management` documentation](https://www.contentful.com/developers/docs/extensibility/app-framework/sdk/#using-the-contentful-management-library)
-to find out more.
+3. Use the tabs:
 
-## Learn More
+   - Unlinked Content Entries: Review and clean up content that’s no longer in use.
+   - Unused Media: Identify unused images and assets.
+   - Unused Content Types: View content types with no entries.
 
-[Read more](https://www.contentful.com/developers/docs/extensibility/app-framework/create-contentful-app/) and check out the video on how to use the CLI.
+You can filter, sort, and bulk delete unused items directly from the interface.
+
+---
+
+## Why Use Content Auditor?
+
+Over time, content platforms can become cluttered with unused assets, outdated entries, and deprecated content types, leading to increased complexity and reduced performance.
+
+Content Auditor helps teams regain control over their content environment through actionable insights and one-click cleanup capabilities.
+
+Key advantages include:
+
+1. Enhanced performance through the removal of unnecessary or orphaned content.
+
+2. Improved content governance by identifying and eliminating obsolete structures and data.
+
+3. Streamlined content operations, ensuring only relevant, published material remains in the system.
+
+With Content Auditor, teams can:
+
+1. Analyze and sort unlinked content entries by content type, search large result sets, and perform one-click deletion for selected or all entries.
+
+2. Automatically detect unused media assets, enabling easy selection and batch deletion of assets not referenced anywhere in the content model.
+
+3. Identify unused content types with no existing entries, flagged automatically and available for safe, one-click removal.
+
+This tool is ideal for content audits, model cleanups, or regular maintenance — enabling content teams to maintain a structured, efficient, and clutter-free workspace.
+
+---
+
+## Support
+
+Need help or want to contribute?  
+
+Contact the team at support@espire.com or open an issue in this repo.
+
+For official support and inquiries, visit:
+https://www.espire.com/contact-us
+
+The support team will respond promptly to assist with any questions, feature requests, or issues related to the Content Auditor app.
+
+---
+
+## License
+MIT License – see LICENSE file for details.
