@@ -70,7 +70,7 @@ const GenerateMediaReport = ({
   return (
     <>
       <Heading className="h1">
-        Unused Media Items{" "}
+        Unused Media Items
         <Subheading>
           Find uploaded media assets that are not used in any entries, and
           delete selected or all unused files in one click.
