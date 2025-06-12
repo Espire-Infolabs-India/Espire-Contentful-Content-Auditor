@@ -213,17 +213,31 @@ const GenerateEntryReport = ({
         </TableHead>
         <TableBody>
           {paginatedEntries.map((entry) => (
-            <TableRow key={entry?.sys?.id}>
+            <TableRow
+              key={entry?.sys?.id}
+              onClick={() => {
+                const urn = entry?.sys?.urn;
+                if (urn && urn.includes("content:")) {
+                  const url = `https://app.contentful.com/${
+                    urn.split("content:")[1]
+                  }`;
+                  window.open(url, "_blank");
+                }
+              }}
+              style={{ cursor: "pointer" }}
+            >
               <TableCell>
                 <Checkbox
                   isChecked={selectedIds.includes(entry?.sys?.id)}
                   onChange={(e) =>
                     toggleSelect(e?.target?.checked, entry?.sys?.id)
                   }
+                  onClick={(e) => e.stopPropagation()}
                   aria-label={`Select ${entry?.sys?.id}`}
                 />
               </TableCell>
               <TableCell>{getDisplayName(entry)}</TableCell>
+
               <TableCell>{entry?.sys?.contentType?.sys?.id}</TableCell>
               <TableCell>
                 {entry?.sys?.updatedAt

@@ -101,11 +101,24 @@ const GenerateUnusedContentTypesReport = ({
         </TableHead>
         <TableBody>
           {paginatedTypes.map((type) => (
-            <TableRow key={type?.sys?.id}>
+            <TableRow
+              key={type?.sys?.id}
+              onClick={() => {
+                const urn = type?.sys?.urn;
+                if (urn && urn.includes("content:")) {
+                  const url = `https://app.contentful.com/${
+                    urn.split("content:")[1]
+                  }`;
+                  window.open(url, "_blank");
+                }
+              }}
+              style={{ cursor: "pointer" }}
+            >
               <TableCell>
                 <Checkbox
                   isChecked={selectedTypes.includes(type?.sys?.id)}
                   onChange={() => toggleTypeSelection(type?.sys?.id)}
+                  onClick={(e) => e.stopPropagation()}
                   aria-label={`Select ${type?.sys?.id}`}
                 />
               </TableCell>

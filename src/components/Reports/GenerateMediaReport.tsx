@@ -28,6 +28,14 @@ const statusColorMap: Record<
   archived: "secondary",
 };
 
+const getAssetStatus = (asset: any): string => {
+  if (asset?.sys?.archivedAt) return "Archived";
+  const status =
+    asset?.sys?.fieldStatus?.["*"]?.["en-US"] ||
+    asset?.sys?.status ||
+    "Unknown";
+  return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+};
 type Props = {
   unusedMedia: any[];
   selectedAssets: string[];
@@ -57,11 +65,11 @@ const GenerateMediaReport = ({
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       const newSelections = paginatedIds.filter(
-        (id: string) => !selectedAssets.includes(id)
+        (id) => !selectedAssets.includes(id)
       );
-      newSelections.forEach((id: string) => toggleAssetSelection(id));
+      newSelections.forEach((id) => toggleAssetSelection(id));
     } else {
-      paginatedIds.forEach((id: string) => {
+      paginatedIds.forEach((id) => {
         if (selectedAssets.includes(id)) toggleAssetSelection(id);
       });
     }
@@ -92,7 +100,7 @@ const GenerateMediaReport = ({
           <TableRow>
             <TableCell>
               <Checkbox
-                isChecked={paginatedIds.every((id: string) =>
+                isChecked={paginatedIds.every((id) =>
                   selectedAssets.includes(id)
                 )}
                 onChange={(e) => handleSelectAll(e.target.checked)}
@@ -107,7 +115,7 @@ const GenerateMediaReport = ({
           </TableRow>
         </TableHead>
         <TableBody>
-          {paginatedEntries.map((asset: any) => {
+          {paginatedEntries.map((asset) => {
             const file = asset.fields?.file?.["en-US"];
             const fileUrl = file?.url?.startsWith("//")
               ? `https:${file?.url}`
@@ -125,18 +133,31 @@ const GenerateMediaReport = ({
               ? formatDistanceToNow(new Date(asset.sys.updatedAt), {
                   addSuffix: true,
                 }).replace("about", "")
-              : "—";
+              : "—";   
             const statusRaw = asset.sys.archivedAt
               ? "archived"
               : asset.sys?.fieldStatus?.["*"]?.["en-US"];
             const status = capitalizeFirst(statusRaw);
 
             return (
-              <TableRow key={asset?.sys?.id}>
+              <TableRow
+                key={asset?.sys?.id}
+                onClick={() => {
+                  const urn = asset?.sys?.urn;
+                  if (urn && urn.includes("content:")) {
+                    const url = `https://app.contentful.com/${
+                      urn.split("content:")[1]
+                    }`;
+                    window.open(url, "_blank");
+                  }
+                }}
+                style={{ cursor: "pointer" }}
+              >
                 <TableCell>
                   <Checkbox
                     isChecked={selectedAssets.includes(asset?.sys?.id)}
                     onChange={() => toggleAssetSelection(asset?.sys?.id)}
+                    onClick={(e) => e.stopPropagation()}
                     aria-label={`Select ${asset?.sys?.id}`}
                   />
                 </TableCell>
