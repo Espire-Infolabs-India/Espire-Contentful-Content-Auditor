@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { Button, Box, Flex, Spinner } from "@contentful/f36-components";
+import {
+  Button,
+  Box,
+  Flex,
+  Spinner,
+  Tooltip,
+} from "@contentful/f36-components";
 import { PageAppSDK } from "@contentful/app-sdk";
 import { useSDK } from "@contentful/react-apps-toolkit";
 import { generateReport } from "../lib/generateReport";
@@ -210,39 +216,54 @@ const Page = () => {
           gap="spacing2Xs"
           className="flex-design flex-direction left-side-menu flex-item-left border-right"
         >
-          <Button
-            variant={activeReport === "entry" ? "primary" : "secondary"}
-            onClick={() => {
-              setActiveReport("entry");
-              setShowContentTypeDropdown(true);
-              resetReports();
-            }}
-            isDisabled={!accessToken || loadingState !== null}
+          <Tooltip
+            content="Unlinked Content Entries Report"
+            maxWidth={360}
+            placement="right"
           >
-            <Box as="span" className="flex-design align-item-center">
-              <PageIcon size="small" /> Unlinked Content Entries Report
-            </Box>
-          </Button>
-          <Button
-            variant={activeReport === "media" ? "primary" : "secondary"}
-            onClick={handleGenerateMediaReport}
-            isLoading={loadingState === "media"}
-            isDisabled={!accessToken || loadingState !== null}
+            <Button
+              variant={activeReport === "entry" ? "primary" : "secondary"}
+              onClick={() => {
+                setActiveReport("entry");
+                setShowContentTypeDropdown(true);
+                resetReports();
+              }}
+              isDisabled={!accessToken || loadingState !== null}
+            >
+              <Box as="span" className="flex-design align-item-center">
+                <PageIcon size="small" /> Unlinked Content Entries
+              </Box>
+            </Button>
+          </Tooltip>
+
+          <Tooltip content="Unused Media" maxWidth={360} placement="right">
+            <Button
+              variant={activeReport === "media" ? "primary" : "secondary"}
+              onClick={handleGenerateMediaReport}
+              isLoading={loadingState === "media"}
+              isDisabled={!accessToken || loadingState !== null}
+            >
+              <Box as="span" className="flex-design align-item-center">
+                <AssetIcon size="small" /> Unused Media Report
+              </Box>
+            </Button>
+          </Tooltip>
+          <Tooltip
+            content="Unused Content Types Report"
+            maxWidth={360}
+            placement="right"
           >
-            <Box as="span" className="flex-design align-item-center">
-              <AssetIcon size="small" /> Unused Media Report
-            </Box>
-          </Button>
-          <Button
-            variant={activeReport === "types" ? "primary" : "secondary"}
-            onClick={handleGenerateUnusedContentTypeReport}
-            isLoading={loadingState === "types"}
-            isDisabled={!accessToken || loadingState !== null}
-          >
-            <Box as="span" className="flex-design align-item-center">
-              <FolderOpenIcon size="small" /> Unused Content Types Report
-            </Box>
-          </Button>
+            <Button
+              variant={activeReport === "types" ? "primary" : "secondary"}
+              onClick={handleGenerateUnusedContentTypeReport}
+              isLoading={loadingState === "types"}
+              isDisabled={!accessToken || loadingState !== null}
+            >
+              <Box as="span" className="flex-design align-item-center">
+                <FolderOpenIcon size="small" /> Unused Content Types
+              </Box>
+            </Button>
+          </Tooltip>
         </Flex>
 
         <Box className="flex-item-right">

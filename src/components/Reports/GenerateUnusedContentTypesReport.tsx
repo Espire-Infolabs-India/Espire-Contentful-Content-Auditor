@@ -10,6 +10,7 @@ import {
   Heading,
   Flex,
   Spinner,
+  Subheading,
 } from "@contentful/f36-components";
 import { useState } from "react";
 import PaginationControl from "../../locations/PaginationWithTotal";
@@ -65,6 +66,10 @@ const GenerateUnusedContentTypesReport = ({
     <>
       <Heading className="h1" marginBottom="spacingM">
         Unused Content Types
+        <Subheading>
+          Identify content types with no associated entries and delete one or
+          multiple types to keep your content model clean.
+        </Subheading>
       </Heading>
 
       <Flex justifyContent="space-between" marginBottom="spacingM">
