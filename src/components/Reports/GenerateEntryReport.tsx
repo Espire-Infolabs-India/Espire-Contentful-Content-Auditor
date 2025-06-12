@@ -131,9 +131,9 @@ const GenerateEntryReport = ({
               variant="secondary"
               startIcon={
                 isMenuOpen && isMenuOpen ? (
-                  <ChevronUpIcon style={{marginLeft:'4px'}} />
+                  <ChevronUpIcon style={{ marginLeft: "4px" }} />
                 ) : (
-                  <ChevronDownIcon style={{marginLeft:'4px'}} />
+                  <ChevronDownIcon style={{ marginLeft: "4px" }} />
                 )
               }
               className="flex-design flex-direction-row-revese"
