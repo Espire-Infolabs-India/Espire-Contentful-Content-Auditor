@@ -10,6 +10,7 @@ import {
   Heading,
   Spinner,
   Badge,
+  Subheading,
 } from "@contentful/f36-components";
 import { useState } from "react";
 import PaginationControl from "../../locations/PaginationWithTotal";
@@ -68,7 +69,13 @@ const GenerateMediaReport = ({
 
   return (
     <>
-      <Heading className="h1">Unused Media Items</Heading>
+      <Heading className="h1">
+        Unused Media Items
+        <Subheading>
+          Find uploaded media assets that are not used in any entries, and
+          delete selected or all unused files in one click.
+        </Subheading>
+      </Heading>
 
       <Flex justifyContent="space-between" marginBottom="spacingM">
         <Button

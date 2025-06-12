@@ -39,6 +39,12 @@ body {
   color: var(--primery-text-color);
 }
 
+h3[data-test-id~="cf-ui-subheading"]{
+  font-size: 14px;
+  font-weight: 400;
+  margin-top: 4px;
+}
+
 .mb {
   margin-bottom: 20px;
 }
