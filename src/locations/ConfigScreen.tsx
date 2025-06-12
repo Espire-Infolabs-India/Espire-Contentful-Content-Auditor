@@ -51,9 +51,10 @@ const ConfigScreen = () => {
       className={css({ margin: "80px", maxWidth: "800px" })}
     >
       <Form>
-        <Paragraph>
-          Welcome to your Contentful app. Enter the CMA token to use it across
-          the app.
+        <Heading style={{marginBottom:'4px'}}>Welcome to the Content Auditor App</Heading>
+        <Paragraph style={{marginBottom:'20px'}}>
+          Welcome to your Contentful app. Please enter your Content Management
+          API (CMA) token to begin using the app.
         </Paragraph>
 
         <TextInput
