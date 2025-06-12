@@ -27,7 +27,6 @@ const statusColorMap: Record<
   draft: "warning",
   archived: "secondary",
 };
-
 type Props = {
   unusedMedia: any[];
   selectedAssets: string[];
@@ -132,11 +131,24 @@ const GenerateMediaReport = ({
             const status = capitalizeFirst(statusRaw);
 
             return (
-              <TableRow key={asset?.sys?.id}>
+              <TableRow
+                key={asset?.sys?.id}
+                onClick={() => {
+                  const urn = asset?.sys?.urn;
+                  if (urn && urn.includes("content:")) {
+                    const url = `https://app.contentful.com/${
+                      urn.split("content:")[1]
+                    }`;
+                    window.open(url, "_blank");
+                  }
+                }}
+                style={{ cursor: "pointer" }}
+              >
                 <TableCell>
                   <Checkbox
                     isChecked={selectedAssets.includes(asset?.sys?.id)}
                     onChange={() => toggleAssetSelection(asset?.sys?.id)}
+                    onClick={(e) => e.stopPropagation()}
                     aria-label={`Select ${asset?.sys?.id}`}
                   />
                 </TableCell>
