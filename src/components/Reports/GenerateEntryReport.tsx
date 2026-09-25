@@ -44,6 +44,7 @@ type Props = {
   onPageChange: (page: number) => void;
   onItemsPerPageChange: (count: number) => void;
   searchQuery: string;
+  webappHostname: string;
 };
 
 const GenerateEntryReport = ({
@@ -54,6 +55,7 @@ const GenerateEntryReport = ({
   onPageChange,
   onItemsPerPageChange,
   searchQuery,
+  webappHostname,
 }: Props) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [sortOrder, setSortOrder] = useState<
@@ -218,7 +220,7 @@ const GenerateEntryReport = ({
               onClick={() => {
                 const urn = entry?.sys?.urn;
                 if (urn && urn.includes("content:")) {
-                  const url = `https://app.contentful.com/${
+                  const url = `https://${webappHostname}/${
                     urn.split("content:")[1]
                   }`;
                   window.open(url, "_blank");
