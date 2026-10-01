@@ -29,6 +29,7 @@ const Page = () => {
   const sdk = useSDK<PageAppSDK>();
   const cmaHostname = sdk.hostnames.management;
   const webappHostname = sdk.hostnames.webapp;
+  console.log("SDK hostnames:", sdk.hostnames);
   const [accessToken, setAccessToken] = useState("");
   const [, setSpaceName] = useState("");
   const [spaceId, setSpaceId] = useState("");
